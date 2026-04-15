@@ -1,8 +1,8 @@
 const db = require("../database/connect.js");
 
 class User {
-  constructor(user_id, username, email, password, home_country) {
-    this.user_id = user_id;
+  constructor(id, username, email, password, home_country) {
+    this.id = id;
     this.username = username;
     this.email = email;
     this.password = password;
@@ -17,7 +17,7 @@ class User {
     return result.rows.map(
       (row) =>
         new User(
-          row.user_id,
+          row.id,
           row.username,
           row.email,
           row.password,
@@ -36,7 +36,7 @@ class User {
     return result.rows.map(
       (row) =>
         new User(
-          row.user_id,
+          row.id,
           row.username,
           row.email,
           row.password,
@@ -46,9 +46,9 @@ class User {
   }
 
   // Get user by ID
-  static async getById(user_id) {
+  static async getById(id) {
     const result = await db.query("SELECT * FROM users WHERE user_id = $1", [
-      user_id,
+      id,
     ]);
     if (result.rows.length === 0) {
       throw new Error("User not found");
@@ -56,7 +56,7 @@ class User {
     return result.rows.map(
       (row) =>
         new User(
-          row.user_id,
+          row.id,
           row.username,
           row.email,
           row.password,
@@ -83,7 +83,7 @@ class User {
     );
     const row = result.rows[0];
     return new User(
-      row.user_id,
+      row.id,
       row.username,
       row.email,
       row.password,
@@ -91,7 +91,7 @@ class User {
     );
   }
   // Update user details
-  static async update(user_id, user) {
+  static async update(id, user) {
     const fields = [];
     const values = [];
     let index = 1;
@@ -107,7 +107,7 @@ class User {
       throw new Error("No fields to update");
     }
 
-    values.push(user_id);
+    values.push(id);
 
     const query = `UPDATE users SET ${fields.join(", ")} WHERE user_id = $${index} RETURNING *`;
 
@@ -120,7 +120,7 @@ class User {
     const row = result.rows[0];
 
     return new User(
-      row.user_id,
+      row.id,
       row.username,
       row.email,
       row.password,
@@ -129,7 +129,7 @@ class User {
   }
 
   // Delete user
-  static async delete(user_id) {
+  static async delete(id) {
     const result = await db.query(
       "DELETE FROM users WHERE user_id = $1 RETURNING *",
       [user_id],
@@ -139,7 +139,7 @@ class User {
     }
     const row = result.rows[0];
     return new User(
-      row.user_id,
+      row.id,
       row.username,
       row.email,
       row.password,
