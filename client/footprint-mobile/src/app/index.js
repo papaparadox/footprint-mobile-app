@@ -6,13 +6,23 @@ export default function HomePage() {
     <View style={styles.container}>
       <Text style={styles.title}>Footprint</Text>
 
-      <Link href='/countries' asChild>
+      <Link href="/countries" asChild>
         <Pressable style={styles.button}>
           <Text style={styles.buttonText}>First page</Text>
         </Pressable>
       </Link>
+      <Link href="/registration" asChild>
+        <Pressable style={styles.button}>
+          <Text style={styles.buttonText}>Registration page</Text>
+        </Pressable>
+      </Link>
+      <Link href="/login" asChild>
+        <Pressable style={styles.button}>
+          <Text style={styles.buttonText}>Login page</Text>
+        </Pressable>
+      </Link>
 
-      <Link href='/profile' asChild>
+      <Link href="/profile" asChild>
         <Pressable style={styles.button}>
           <Text style={styles.buttonText}>Second pagio</Text>
         </Pressable>
