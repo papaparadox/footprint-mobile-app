@@ -7,6 +7,7 @@ const path = require("path");
 const UserRoutes = require("./routes/user");
 const CountryRoutes = require("./routes/country");
 const VisitedRoutes = require("./routes/visitedLocation");
+const TripRoutes = require("./routes/trip");
 
 //Define app is an express application
 const app = express();
@@ -20,6 +21,7 @@ app.use(express.static(path.join(__dirname, "../client")));
 app.use("/user", UserRoutes);
 app.use("/country", CountryRoutes);
 app.use("/visited", VisitedRoutes);
+app.use("/trip", TripRoutes);
 
 app.get("/", (req, res) => {
   res.send("Welcome to Footprint API 👣");

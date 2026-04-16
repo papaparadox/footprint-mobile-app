@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS trips (
     title VARCHAR(255) NOT NULL,
     start_date DATE,
     end_date DATE,
+    total_days INTEGER,
     notes TEXT,
     share_token VARCHAR(255) UNIQUE,
     mood VARCHAR(50),
