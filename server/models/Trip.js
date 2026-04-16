@@ -135,6 +135,56 @@ class Trip {
     return result.rows[0];
   }
 
+  static async getImages(trip_id) {
+    const result = await db.query(
+      "SELECT * FROM trips_images WHERE trip_id = $1 ORDER BY uploaded_at ASC",
+      [trip_id]
+    );
+    return result.rows;
+  }
+
+  static async update(id, user_id, data) {
+    const { title, start_date, end_date, total_days, notes, mood } = data;
+
+    // recalculate total_days if both dates provided
+    let calculatedDays = total_days;
+    if (start_date && end_date) {
+      const start = new Date(start_date);
+      const end = new Date(end_date);
+      calculatedDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    }
+
+    const result = await db.query(
+      `UPDATE trips SET
+        title = COALESCE($1, title),
+        start_date = COALESCE($2, start_date),
+        end_date = COALESCE($3, end_date),
+        total_days = COALESCE($4, total_days),
+        notes = COALESCE($5, notes),
+        mood = COALESCE($6, mood)
+      WHERE id = $7 AND user_id = $8
+      RETURNING *`,
+      [title, start_date, end_date, calculatedDays, notes, mood, id, user_id]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error("Trip not found or does not belong to this user");
+    }
+
+    return result.rows[0];
+  }
+
+  static async deleteImage(image_id, trip_id) {
+    const result = await db.query(
+      "DELETE FROM trips_images WHERE id = $1 AND trip_id = $2 RETURNING *",
+      [image_id, trip_id]
+    );
+    if (result.rows.length === 0) {
+      throw new Error("Image not found or does not belong to this trip");
+    }
+    return result.rows[0];
+  }
+
   static async delete(id, user_id) {
     const result = await db.query(
       "DELETE FROM trips WHERE id = $1 AND user_id = $2 RETURNING *",

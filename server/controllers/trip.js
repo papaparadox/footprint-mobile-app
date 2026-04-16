@@ -47,14 +47,49 @@ async function createTrip(req, res) {
 
 async function addImage(req, res) {
   try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No image file provided" });
+    }
+
+    const image_url = req.file.path;
+    const caption = req.body.caption || null;
+
     const image = await Trip.addImage(
       req.params.id,
-      req.body.image_url,
-      req.body.caption
+      image_url,
+      caption
     );
+
     res.status(201).json(image);
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+}
+
+async function getImages(req, res) {
+    try {
+        const images = await Trip.getImages(req.params.id);
+        res.status(200).json(images);
+    } catch (error) {
+        res.status(404).json({ error: error.message })
+    }
+}
+
+async function updateTrip(req, res) {
+  try {
+    const trip = await Trip.update(req.params.id, req.user.id, req.body);
+    res.status(200).json(trip);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
+
+async function deleteImage(req, res) {
+  try {
+    const deleted = await Trip.deleteImage(req.params.imageId, req.params.id);
+    res.status(200).json({ message: "Image deleted", deleted });
+  } catch (error) {
+    res.status(404).json({ error: error.message });
   }
 }
 
@@ -67,4 +102,4 @@ async function deleteTrip(req, res) {
   }
 }
 
-module.exports = { getTripsByUser, getTripById, getTripByToken, createTrip, addImage, deleteTrip };
+module.exports = { getTripsByUser, getTripById, getTripByToken, createTrip, updateTrip, addImage, getImages, deleteImage, deleteTrip };
