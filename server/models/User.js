@@ -47,7 +47,7 @@ class User {
 
   // Get user by ID
   static async getById(id) {
-    const result = await db.query("SELECT * FROM users WHERE user_id = $1", [
+    const result = await db.query("SELECT * FROM users WHERE id = $1", [
       id,
     ]);
     if (result.rows.length === 0) {
@@ -109,7 +109,7 @@ class User {
 
     values.push(id);
 
-    const query = `UPDATE users SET ${fields.join(", ")} WHERE user_id = $${index} RETURNING *`;
+    const query = `UPDATE users SET ${fields.join(", ")} WHERE id = $${index} RETURNING *`;
 
     const result = await db.query(query, values);
 
@@ -131,8 +131,8 @@ class User {
   // Delete user
   static async delete(id) {
     const result = await db.query(
-      "DELETE FROM users WHERE user_id = $1 RETURNING *",
-      [user_id],
+      "DELETE FROM users WHERE id = $1 RETURNING *",
+      [id],
     );
     if (result.rows.length === 0) {
       throw new Error("User not found");
