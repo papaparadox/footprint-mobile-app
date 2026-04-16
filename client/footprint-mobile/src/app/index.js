@@ -1,4 +1,3 @@
-
 import {
   View,
   Text,
@@ -34,35 +33,35 @@ export default function HomePage() {
               </Pressable>
             </Link>
 
-      <Link href="/countries" asChild>
-        <Pressable style={styles.button}>
-          <Text style={styles.buttonText}>First page</Text>
-        </Pressable>
-      </Link>
-      <Link href="/registration" asChild>
-        <Pressable style={styles.button}>
-          <Text style={styles.buttonText}>Registration page</Text>
-        </Pressable>
-      </Link>
-      <Link href="/login" asChild>
-        <Pressable style={styles.button}>
-          <Text style={styles.buttonText}>Login page</Text>
-        </Pressable>
-      </Link>
+            <Link href="/countries" asChild>
+              <Pressable style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonText}>Countries</Text>
+              </Pressable>
+            </Link>
 
-      <Link href="/profile" asChild>
-        <Pressable style={styles.button}>
-          <Text style={styles.buttonText}>Second pagio</Text>
-        </Pressable>
- 
-      </Link>
-</Link>
-              <Link href="/trips" asChild>
-                <Pressable style={styles.secondaryButton}>
-                  <Text style={styles.secondaryButtonText}>Trips</Text>
-                </Pressable>
-              </Link>
-           
+            <Link href="/registration" asChild>
+              <Pressable style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonText}>Registration</Text>
+              </Pressable>
+            </Link>
+
+            <Link href="/login" asChild>
+              <Pressable style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonText}>Login</Text>
+              </Pressable>
+            </Link>
+
+            <Link href="/profile" asChild>
+              <Pressable style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonText}>Profile</Text>
+              </Pressable>
+            </Link>
+
+            <Link href="/trips" asChild>
+              <Pressable style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonText}>Trips</Text>
+              </Pressable>
+            </Link>
           </View>
         </View>
       </ImageBackground>
@@ -123,9 +122,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#222",
     fontWeight: "500",
-  },
-  secondaryButtons: {
-    gap: 12,
   },
   secondaryButton: {
     backgroundColor: "rgba(255,255,255,0.9)",
