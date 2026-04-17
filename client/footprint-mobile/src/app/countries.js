@@ -338,24 +338,39 @@ export default function CountriesPage() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f3f4f6",
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.20)",
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 120,
+    justifyContent: "space-between",
   },
   container: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 40,
     paddingBottom: 140,
   },
-  title: {
+
+    title: {
     fontSize: 28,
-    fontWeight: "700",
-    color: "#111827",
+    fontWeight: "800",
+    color: "#000000ff",
+    marginTop: 24,
+    letterSpacing: 0.2,
   },
+  
+  
+  
   subtitle: {
-    fontSize: 15,
+    fontSize: 16,
     color: "#6b7280",
-    marginBottom: 20,
+    marginBottom: 24,
+    lineHeight: 22,
   },
   listSection: {
-    marginTop: 20,
+    marginTop: 24,
   },
   listTitle: {
     fontSize: 18,
@@ -382,7 +397,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   saveButton: {
-    marginTop: 20,
+    marginTop: 24,
     backgroundColor: "#2E8B57",
     paddingVertical: 14,
     borderRadius: 14,
