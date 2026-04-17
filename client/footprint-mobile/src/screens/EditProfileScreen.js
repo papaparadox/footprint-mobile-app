@@ -5,7 +5,6 @@ import {
   ScrollView,
   StyleSheet,
   Pressable,
-  Image,
 } from "react-native";
 import { router } from "expo-router";
 import FormInput from "../components/FormInput";
@@ -17,7 +16,9 @@ export default function EditProfileScreen() {
     username: "maya_reyes",
     email: "maya@example.com",
     home_country: "Spain",
-    bio: "Nomadic soul on the lookout for serene spots, rich cultures and luxurious hideaways.",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -42,6 +43,27 @@ export default function EditProfileScreen() {
 
     if (!form.home_country.trim()) {
       nextErrors.home_country = "Home country is required.";
+    }
+
+    const isTryingToChangePassword =
+      form.currentPassword || form.newPassword || form.confirmPassword;
+
+    if (isTryingToChangePassword) {
+      if (!form.currentPassword.trim()) {
+        nextErrors.currentPassword = "Current password is required.";
+      }
+
+      if (!form.newPassword.trim()) {
+        nextErrors.newPassword = "New password is required.";
+      } else if (form.newPassword.length < 6) {
+        nextErrors.newPassword = "New password must be at least 6 characters.";
+      }
+
+      if (!form.confirmPassword.trim()) {
+        nextErrors.confirmPassword = "Please confirm your new password.";
+      } else if (form.newPassword !== form.confirmPassword) {
+        nextErrors.confirmPassword = "Passwords do not match.";
+      }
     }
 
     setErrors(nextErrors);
@@ -71,7 +93,7 @@ export default function EditProfileScreen() {
         <Text style={styles.heroEyebrow}>Profile</Text>
         <Text style={styles.heroTitle}>Edit your details</Text>
         <Text style={styles.heroSubtitle}>
-          Keep your travel identity up to date.
+          Update your profile information and password.
         </Text>
       </View>
 
@@ -120,17 +142,40 @@ export default function EditProfileScreen() {
           error={errors.home_country}
         />
 
-        <View style={styles.bioGroup}>
-          <Text style={styles.bioLabel}>Bio</Text>
-          <View style={styles.bioInput}>
-            <Text
-              style={styles.bioText}
-              onPress={() => {}}
-            >
-              {form.bio}
-            </Text>
-          </View>
-        </View>
+        <Text style={styles.sectionTitle}>Change Password</Text>
+
+        <FormInput
+          label="Current Password"
+          value={form.currentPassword}
+          onChangeText={(text) =>
+            setForm((prev) => ({ ...prev, currentPassword: text }))
+          }
+          placeholder="Enter current password"
+          secureTextEntry
+          error={errors.currentPassword}
+        />
+
+        <FormInput
+          label="New Password"
+          value={form.newPassword}
+          onChangeText={(text) =>
+            setForm((prev) => ({ ...prev, newPassword: text }))
+          }
+          placeholder="Enter new password"
+          secureTextEntry
+          error={errors.newPassword}
+        />
+
+        <FormInput
+          label="Confirm New Password"
+          value={form.confirmPassword}
+          onChangeText={(text) =>
+            setForm((prev) => ({ ...prev, confirmPassword: text }))
+          }
+          placeholder="Confirm new password"
+          secureTextEntry
+          error={errors.confirmPassword}
+        />
 
         {successMessage ? (
           <Text style={styles.successMessage}>{successMessage}</Text>
@@ -238,30 +283,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLOURS.accent,
   },
-  bioGroup: {
-    marginBottom: 14,
-  },
-  bioLabel: {
-    fontSize: 12,
+  sectionTitle: {
+    marginTop: 8,
+    marginBottom: 12,
+    fontSize: 16,
     fontWeight: "700",
-    color: COLOURS.accent,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: 6,
-  },
-  bioInput: {
-    minHeight: 110,
-    backgroundColor: COLOURS.bg,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLOURS.border,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  bioText: {
-    fontSize: 14,
     color: COLOURS.text,
-    lineHeight: 20,
   },
   successMessage: {
     marginBottom: 12,
