@@ -15,7 +15,7 @@ class User {
       throw new Error("No users found");
     }
     return result.rows.map(
-      (row) => new User(row.id, row.username, row.email, row.home_country),
+      (row) => new User(row.id, row.username, row.email,row.password, row.home_country),
     );
   }
   // Get user by email
@@ -47,7 +47,7 @@ class User {
       throw new Error("User not found");
     }
     return result.rows.map(
-      (row) => new User(row.id, row.username, row.email, row.home_country),
+      (row) => new User(row.id, row.username, row.email,row.password, row.home_country),
     )[0];
   }
   // create user
@@ -124,7 +124,7 @@ class User {
       throw new Error("User not found");
     }
     const row = result.rows[0];
-    return new User(row.id, row.username, row.email, row.home_country);
+    return new User(row.id, row.username, row.email,row.password, row.home_country);
   }
 }
 
