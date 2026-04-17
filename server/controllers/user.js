@@ -9,7 +9,9 @@ async function register(req, res) {
     const salt = await bcrypt.genSalt(parseInt(process.env.BCRYPT_SALT_ROUNDS));
     data.password = await bcrypt.hash(data.password, salt);
     const newUser = await User.create(data);
-    res.status(201).json(newUser);
+
+    const {password, ...userWithoutPassword } = newUser;
+    res.status(201).json(userWithoutPassword);
   } catch (err) {
     res.status(400).json({ err: err.message });
   }
@@ -44,6 +46,9 @@ async function login(req, res) {
       token,
     });
   } catch (err) {
+    if (err.message === "User not found") {
+      return res.status(401).json({ err: "Invalid email or password" });
+    }
     res.status(500).json({ err: err.message });
   }
 }
