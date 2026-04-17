@@ -15,7 +15,7 @@ class User {
       throw new Error("No users found");
     }
     return result.rows.map(
-      (row) => new User(row.id, row.username, row.email, row.home_country),
+      (row) => new User(row.id, row.username, row.email,row.password, row.home_country),
     );
   }
   // Get user by email
@@ -47,7 +47,7 @@ class User {
       throw new Error("User not found");
     }
     return result.rows.map(
-      (row) => new User(row.id, row.username, row.email, row.home_country),
+      (row) => new User(row.id, row.username, row.email,row.password, row.home_country),
     )[0];
   }
   // create user
@@ -77,43 +77,52 @@ class User {
     );
   }
   // Update user details
-  static async update(id, user) {
-    const fields = [];
-    const values = [];
-    let index = 1;
+  async function updateUser(req, res) {
+  try {
+    const userId = req.user.id;
+    const allowedFields = ["username", "email", "password", "home_country"];
+    const updates = {};
 
-    // Dynamically build query
-    for (const key in user) {
-      fields.push(`${key} = $${index}`);
-      values.push(user[key]);
-      index++;
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) {
+        updates[key] = req.body[key];
+      }
     }
 
-    if (fields.length === 0) {
-      throw new Error("No fields to update");
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ err: "No fields to update" });
     }
 
-    values.push(id);
-
-    const query = `UPDATE users SET ${fields.join(", ")} WHERE id = $${index} RETURNING *`;
-
-    const result = await db.query(query, values);
-
-    if (result.rows.length === 0) {
-      throw new Error("User not found");
+    if (updates.password) {
+      const salt = await bcrypt.genSalt(
+        parseInt(process.env.BCRYPT_SALT_ROUNDS)
+      );
+      updates.password = await bcrypt.hash(updates.password, salt);
     }
 
-    const row = result.rows[0];
+    const updatedUser = await User.update(userId, updates);
 
-    return new User(
-      row.id,
-      row.username,
-      row.email,
-      row.password,
-      row.home_country,
-    );
+    res.status(200).json({
+      success: true,
+      user: {
+        id: updatedUser.id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        home_country: updatedUser.home_country,
+      },
+    });
+  } catch (err) {
+    if (err.message === "No fields to update") {
+      return res.status(400).json({ err: err.message });
+    }
+
+    if (err.message === "User not found") {
+      return res.status(404).json({ err: err.message });
+    }
+
+    res.status(500).json({ err: err.message });
   }
-
+}
   // Delete user
   static async delete(id) {
     const result = await db.query(
@@ -124,7 +133,7 @@ class User {
       throw new Error("User not found");
     }
     const row = result.rows[0];
-    return new User(row.id, row.username, row.email, row.home_country);
+    return new User(row.id, row.username, row.email,row.password, row.home_country);
   }
 }
 
