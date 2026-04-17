@@ -77,52 +77,43 @@ class User {
     );
   }
   // Update user details
-  async function updateUser(req, res) {
-  try {
-    const userId = req.user.id;
-    const allowedFields = ["username", "email", "password", "home_country"];
-    const updates = {};
+  static async update(id, user) {
+    const fields = [];
+    const values = [];
+    let index = 1;
 
-    for (const key of allowedFields) {
-      if (req.body[key] !== undefined) {
-        updates[key] = req.body[key];
-      }
+    // Dynamically build query
+    for (const key in user) {
+      fields.push(`${key} = $${index}`);
+      values.push(user[key]);
+      index++;
     }
 
-    if (Object.keys(updates).length === 0) {
-      return res.status(400).json({ err: "No fields to update" });
+    if (fields.length === 0) {
+      throw new Error("No fields to update");
     }
 
-    if (updates.password) {
-      const salt = await bcrypt.genSalt(
-        parseInt(process.env.BCRYPT_SALT_ROUNDS)
-      );
-      updates.password = await bcrypt.hash(updates.password, salt);
+    values.push(id);
+
+    const query = `UPDATE users SET ${fields.join(", ")} WHERE id = $${index} RETURNING *`;
+
+    const result = await db.query(query, values);
+
+    if (result.rows.length === 0) {
+      throw new Error("User not found");
     }
 
-    const updatedUser = await User.update(userId, updates);
+    const row = result.rows[0];
 
-    res.status(200).json({
-      success: true,
-      user: {
-        id: updatedUser.id,
-        username: updatedUser.username,
-        email: updatedUser.email,
-        home_country: updatedUser.home_country,
-      },
-    });
-  } catch (err) {
-    if (err.message === "No fields to update") {
-      return res.status(400).json({ err: err.message });
-    }
-
-    if (err.message === "User not found") {
-      return res.status(404).json({ err: err.message });
-    }
-
-    res.status(500).json({ err: err.message });
+    return new User(
+      row.id,
+      row.username,
+      row.email,
+      row.password,
+      row.home_country,
+    );
   }
-}
+
   // Delete user
   static async delete(id) {
     const result = await db.query(
