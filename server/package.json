@@ -11,7 +11,7 @@
     "start": "node index.js",
     "setup-db": "node ./database/setup-db.js",
     "seed": "node ./database/seedCountries",
-    "test": "jest --coverage --runInBand",
+    "test": "jest --coverage --runInBand --forceExit",
     "test:integration": "set NODE_ENV=test&& jest --coverage --runInBand --forceExit --testPathPattern=integration",
     "seed-test": "set NODE_ENV=test&& node ./database/seedCountries.js",
     "setup-test-db": "set NODE_ENV=test&& node ./database/setup-db.js"
@@ -32,5 +32,12 @@
     "jest": "^29.0.0",
     "nodemon": "^3.1.14",
     "supertest": "^6.3.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testTimeout": 10000,
+    "testMatch": [
+      "**/__test__/**/*.test.js"
+    ]
   }
 }

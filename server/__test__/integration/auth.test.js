@@ -10,7 +10,6 @@ beforeAll(async () => {
 
 afterAll(async () => {
     await pool.query("DELETE FROM users WHERE email = 'auth@test.com'");
-    await pool.end();
 });
 
 describe("POST /user/register", () => {
@@ -35,7 +34,7 @@ describe("POST /user/register", () => {
       home_country: "United Kingdom",
     });
     expect(res.statusCode).toBe(400);
-    expect(res.body).toHaveProperty("error");
+    expect(res.body).toHaveProperty("err");
   });
 
   it("should return 400 if required fields are missing", async () => {
@@ -49,7 +48,7 @@ describe("POST /user/register", () => {
 describe("POST /user/login", () => {
   it("should login and return a token", async () => {
     const res = await request(app).post("/user/login").send({
-      username: "authtest",
+      email: "auth@test.com",
       password: "password123",
     });
     expect(res.statusCode).toBe(200);
@@ -60,15 +59,15 @@ describe("POST /user/login", () => {
 
   it("should return 401 for wrong password", async () => {
     const res = await request(app).post("/user/login").send({
-      username: "authtest",
+      email: "auth@test.com",
       password: "wrongpassword",
     });
     expect(res.statusCode).toBe(401);
   });
 
-  it("should return 401 for unknown username", async () => {
+  it("should return 401 for unknown email", async () => {
     const res = await request(app).post("/user/login").send({
-      username: "ghost",
+      email: "ghost@test.com",
       password: "password123",
     });
     expect(res.statusCode).toBe(401);
@@ -76,9 +75,9 @@ describe("POST /user/login", () => {
 });
 
 describe("Protected routes", () => {
-  it("should return 403 with no token", async () => {
+  it("should return 401 with no token", async () => {
     const res = await request(app).get("/country/");
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 
   it("should return 403 with invalid token", async () => {

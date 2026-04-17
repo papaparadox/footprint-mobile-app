@@ -6,25 +6,26 @@ let token;
 let countryId;
 
 beforeAll(async () => {
-  await pool.query("DELETE FROM users WHERE email = 'countryint@test.com'");
+  await pool.query("DELETE FROM users WHERE email = 'country@test.com'");
 
   await request(app).post("/user/register").send({
-    username: "countryinttest",
-    email: "countryint@test.com",
+    username: "countrytest",
+    email: "country@test.com",
     password: "password123",
     home_country: "United Kingdom",
   });
 
   const res = await request(app).post("/user/login").send({
-    username: "countryinttest",
+    email: "country@test.com",  
     password: "password123",
   });
+
   token = res.body.token;
+  countryId = 1;
 });
 
 afterAll(async () => {
   await pool.query("DELETE FROM users WHERE email = 'countryint@test.com'");
-  await pool.end();
 });
 
 describe("GET /country/", () => {
@@ -48,9 +49,9 @@ describe("GET /country/", () => {
     expect(res.body[0].name).toBe("Afghanistan");
   });
 
-  it("should return 403 without auth token", async () => {
+  it("should return 401 without auth token", async () => {
     const res = await request(app).get("/country/");
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 });
 

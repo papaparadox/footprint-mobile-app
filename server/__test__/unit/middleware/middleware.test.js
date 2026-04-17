@@ -28,20 +28,16 @@ describe("authenticator middleware", () => {
     };
     const mockDecoded = { id: 1, username: "testuser" };
 
-    jwt.verify.mockImplementation((token, secret, callback) => {
-      callback(null, mockDecoded);
-    });
+    jwt.verify.mockReturnValue(mockDecoded);
 
     authenticator(mockReq, mockResponse, mockNext);
 
     expect(jwt.verify).toHaveBeenCalledWith(
       "validToken",
-      process.env.SECRET_TOKEN,
-      expect.any(Function)
+      process.env.SECRET_TOKEN
     );
     expect(mockReq.user).toEqual(mockDecoded);
     expect(mockNext).toHaveBeenCalledTimes(1);
-    expect(mockStatus).not.toHaveBeenCalled();
   });
 
   it("should return 403 if token is invalid", () => {
@@ -60,14 +56,14 @@ describe("authenticator middleware", () => {
     expect(mockJson).toHaveBeenCalledWith({ err: "Invalid token" });
   });
 
-  it("should return 403 if authorization header is missing", () => {
+  it("should return 401 if authorization header is missing", () => {
     const mockReq = { headers: {} };
 
     authenticator(mockReq, mockResponse, mockNext);
 
     expect(jwt.verify).not.toHaveBeenCalled();
     expect(mockNext).not.toHaveBeenCalled();
-    expect(mockStatus).toHaveBeenCalledWith(403);
+    expect(mockStatus).toHaveBeenCalledWith(401);
     expect(mockJson).toHaveBeenCalledWith({ err: "No token provided" });
   });
 

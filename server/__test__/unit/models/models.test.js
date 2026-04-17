@@ -36,7 +36,7 @@ afterAll(async () => {
 // ─── User Model ───────────────────────────────────────────
 describe("User model", () => {
   it("should get a user by username", async () => {
-    const user = await User.getByUsername("modelstest");
+    const user = await User.getByEmail("models@test.com");
     expect(user).toHaveProperty("id");
     expect(user.email).toBe("models@test.com");
   });
@@ -47,7 +47,7 @@ describe("User model", () => {
   });
 
   it("should throw if username not found", async () => {
-    await expect(User.getByUsername("nobody")).rejects.toThrow("User not found");
+    await expect(User.getByEmail("nobody@test.com")).rejects.toThrow("User not found");
   });
 
   it("should throw if id not found", async () => {
