@@ -15,20 +15,13 @@ class User {
       throw new Error("No users found");
     }
     return result.rows.map(
-      (row) =>
-        new User(
-          row.id,
-          row.username,
-          row.email,
-          row.password,
-          row.home_country,
-        ),
+      (row) => new User(row.id, row.username, row.email,row.password, row.home_country),
     );
   }
-  // Get user by username
-  static async getByUsername(username) {
-    const result = await db.query("SELECT * FROM users WHERE username = $1", [
-      username,
+  // Get user by email
+  static async getByEmail(email) {
+    const result = await db.query("SELECT * FROM users WHERE email = $1", [
+      email,
     ]);
     if (result.rows.length === 0) {
       throw new Error("User not found");
@@ -54,14 +47,7 @@ class User {
       throw new Error("User not found");
     }
     return result.rows.map(
-      (row) =>
-        new User(
-          row.id,
-          row.username,
-          row.email,
-          row.password,
-          row.home_country,
-        ),
+      (row) => new User(row.id, row.username, row.email,row.password, row.home_country),
     )[0];
   }
   // create user
@@ -138,13 +124,7 @@ class User {
       throw new Error("User not found");
     }
     const row = result.rows[0];
-    return new User(
-      row.id,
-      row.username,
-      row.email,
-      row.password,
-      row.home_country,
-    );
+    return new User(row.id, row.username, row.email,row.password, row.home_country);
   }
 }
 
