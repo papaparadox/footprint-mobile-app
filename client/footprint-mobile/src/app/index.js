@@ -6,17 +6,19 @@ import {
   ImageBackground,
 } from "react-native";
 import { Link } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 
 export default function HomePage() {
   return (
-    <View style={styles.screen}>
-      <ImageBackground
-        source={{
-          uri: "https://images.pexels.com/photos/19137171/pexels-photo-19137171.jpeg?cs=srgb&dl=pexels-joe-fikar-799933673-19137171.jpg&fm=jpg",
-        }}
-        style={styles.heroCard}
-        imageStyle={styles.heroImage}
-      >
+    <ImageBackground
+      source={{
+        uri: "https://images.pexels.com/photos/19137171/pexels-photo-19137171.jpeg?cs=srgb&dl=pexels-joe-fikar-799933673-19137171.jpg&fm=jpg",
+      }}
+      style={styles.screen}
+      imageStyle={styles.backgroundImage}
+    >
+      <SafeAreaView style={styles.safeArea}>
         <View style={styles.overlay}>
           <Text style={styles.logo}>👣</Text>
 
@@ -63,59 +65,56 @@ export default function HomePage() {
               </Pressable>
             </Link>
           </View>
+
+
         </View>
-      </ImageBackground>
-    </View>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#e5e5e5",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 20,
   },
-  heroCard: {
+  backgroundImage: {
+    resizeMode: "cover",
+  },
+  safeArea: {
     flex: 1,
-    justifyContent: "space-between",
-  },
-  heroImage: {
-    borderRadius: 40,
   },
   overlay: {
     flex: 1,
-    borderRadius: 40,
-    paddingHorizontal: 28,
-    paddingTop: 28,
-    paddingBottom: 32,
-    backgroundColor: "rgba(0,0,0,0.18)",
+    backgroundColor: "rgba(0,0,0,0.20)",
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 120,
     justifyContent: "space-between",
   },
   logo: {
-    fontSize: 28,
+    fontSize: 24,
     textAlign: "center",
     color: "#fff",
-    marginTop: 4,
+    marginTop: 8,
   },
   textContainer: {
-    marginTop: 120,
+    marginTop: 20,
   },
   title: {
-    fontSize: 50,
+    fontSize: 46,
     fontWeight: "800",
     color: "#fff",
-    lineHeight: 56,
+    lineHeight: 50,
     letterSpacing: 1,
   },
   buttonGroup: {
-    gap: 14,
+    gap: 12,
+    marginTop: 20,
   },
   primaryButton: {
     backgroundColor: "#fff",
     borderRadius: 999,
-    paddingVertical: 18,
+    paddingVertical: 16,
     alignItems: "center",
   },
   primaryButtonText: {
@@ -124,13 +123,13 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   secondaryButton: {
-    backgroundColor: "rgba(255,255,255,0.9)",
+    backgroundColor: "rgba(255,255,255,0.92)",
     borderRadius: 999,
-    paddingVertical: 15,
+    paddingVertical: 13,
     alignItems: "center",
   },
   secondaryButtonText: {
-    fontSize: 17,
+    fontSize: 16,
     color: "#222",
     fontWeight: "500",
   },

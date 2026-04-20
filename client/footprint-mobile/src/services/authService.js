@@ -2,7 +2,7 @@ import axios from "axios";
 import { saveToken, removeToken } from "./tokenService";
 
 const API = axios.create({
-  baseURL: "http://192.168.4.23:3000/user",
+  baseURL: "https://footprint-mobile-app.onrender.com/user",
   headers: {
     "Content-Type": "application/json",
   },

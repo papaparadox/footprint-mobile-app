@@ -54,7 +54,7 @@ export default function LoginScreen() {
       setSuccessMessage("Login successful.");
       console.log("Login response:", data);
 
-      router.replace("/home");
+      router.replace("countries");
     } catch (error) {
       setServerError(error.message);
     } finally {

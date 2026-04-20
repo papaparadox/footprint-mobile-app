@@ -1,5 +1,6 @@
-import HomeScreen from "../screens/HomeScreen";
-
-export default function HomePage() {
-  return <HomeScreen />;
-}
+// import HomeScreen from "../screens/HomeScreen";
+// import Profile from "..//app/profile";
+// export default function HomePage() {
+//   // return <HomeScreen />;
+//   return <Profile/>;
+// }

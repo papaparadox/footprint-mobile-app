@@ -43,7 +43,7 @@ describe("User controller", () => {
         id: 1,
         username: "maya",
         email: "maya@test.com",
-        password: "hashedPassword",
+        // password: "hashedPassword",
         home_country: "Spain",
       };
 
