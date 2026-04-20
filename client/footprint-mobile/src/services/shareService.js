@@ -5,8 +5,8 @@ import { Alert } from "react-native";
 
 const BASE_URL = "https://footprint-mobile-app.onrender.com";
 
-export function buildSHareLink(shareToken) {
-    return `${BASE_URL}/trip/share/${shareToken}`;
+export function buildShareLink(shareToken) {
+    return `${BASE_URL}/user/public/${shareToken}`;
 }
 
 export async function shareAsImage(cardRef) {
@@ -23,7 +23,7 @@ export async function shareAsImage(cardRef) {
             return;
         }
 
-        await Sharing.sharingAsync(uri, {
+        await Sharing.shareAsync(uri, {
             mimeType: "image/png",
             dialogTitle: "Share your Footprint",
         });

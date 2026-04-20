@@ -47,6 +47,11 @@ export default function ShareScreen() {
             const profileData = await profileRes.json();
             setUsername(profileData.user?.username || "traveller");
 
+            // after fetching profile, get the public token
+            const tokenRes = await fetch(`${API_BASE_URL}/user/profile/share-token`, { headers });
+            const tokenData = await tokenRes.json();
+            setShareToken(tokenData.public_token);
+
             // fetch stats
             const statsRes = await fetch(`${API_BASE_URL}/stats/${userId}`, { headers });
             const statsData = await statsRes.json();

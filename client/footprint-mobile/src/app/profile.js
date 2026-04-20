@@ -1,5 +1,19 @@
-import { View, Text, StyleSheet, ScrollView, Image, Pressable } from "react-native";
-import { userRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  Pressable,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useAuth } from "../context/AuthContext";
+import { getProfile } from "../services/userService";
+import { getStats } from "../services/statsService";
+import { getTripsByUser } from "../services/tripService";
 
 const USER = {
   name: "Maya Reyes",
@@ -22,20 +36,6 @@ const TRIPS = [
 ];
 
 const MEMORIES = [null, null, null];
-import { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
-import { useAuth } from "../context/AuthContext";
-import { getProfile } from "../services/userService";
-import { getStats } from "../services/statsService";
-import { getTripsByUser } from "../services/tripService";
 
 function Avatar({ source }) {
   return (
@@ -97,7 +97,7 @@ function TripCard({ title }) {
 }
 
 export default function ProfilePage() {
-  const router = userRouter();
+  const router = useRouter();
   const { isAuthenticated, isLoading: authLoading, signOut } = useAuth();
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState(null);
