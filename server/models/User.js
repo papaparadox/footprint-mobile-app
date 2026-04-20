@@ -15,7 +15,14 @@ class User {
       throw new Error("No users found");
     }
     return result.rows.map(
-      (row) => new User(row.id, row.username, row.email,row.password, row.home_country),
+      (row) =>
+        new User(
+          row.id,
+          row.username,
+          row.email,
+          row.password,
+          row.home_country,
+        ),
     );
   }
   // Get user by email
@@ -38,16 +45,41 @@ class User {
     )[0];
   }
 
-  // Get user by ID
-  static async getById(id) {
-    const result = await db.query("SELECT * FROM users WHERE id = $1", [
-      id,
+  // Get user by username
+  static async getByUsername(username) {
+    const result = await db.query("SELECT * FROM users WHERE username = $1", [
+      username,
     ]);
     if (result.rows.length === 0) {
       throw new Error("User not found");
     }
     return result.rows.map(
-      (row) => new User(row.id, row.username, row.email,row.password, row.home_country),
+      (row) =>
+        new User(
+          row.id,
+          row.username,
+          row.email,
+          row.password,
+          row.home_country,
+        ),
+    )[0];
+  }
+
+  // Get user by ID
+  static async getById(id) {
+    const result = await db.query("SELECT * FROM users WHERE id = $1", [id]);
+    if (result.rows.length === 0) {
+      throw new Error("User not found");
+    }
+    return result.rows.map(
+      (row) =>
+        new User(
+          row.id,
+          row.username,
+          row.email,
+          row.password,
+          row.home_country,
+        ),
     )[0];
   }
   // create user
@@ -124,7 +156,13 @@ class User {
       throw new Error("User not found");
     }
     const row = result.rows[0];
-    return new User(row.id, row.username, row.email,row.password, row.home_country);
+    return new User(
+      row.id,
+      row.username,
+      row.email,
+      row.password,
+      row.home_country,
+    );
   }
 }
 

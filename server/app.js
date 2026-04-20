@@ -9,6 +9,7 @@ const CountryRoutes = require("./routes/country");
 const VisitedRoutes = require("./routes/visitedLocation");
 const TripRoutes = require("./routes/trip");
 const UserStatsRoutes = require("./routes/userStats");
+const friendsRoutes = require("./routes/friends");
 
 //Define app is an express application
 const app = express();
@@ -24,6 +25,7 @@ app.use("/country", CountryRoutes);
 app.use("/visited", VisitedRoutes);
 app.use("/trip", TripRoutes);
 app.use("/stats", UserStatsRoutes);
+app.use("/friends", friendsRoutes);
 
 app.get("/", (req, res) => {
   res.send("Welcome to Footprint API 👣");

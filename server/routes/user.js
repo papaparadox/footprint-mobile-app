@@ -10,7 +10,26 @@ userRouter.post("/login", usercontroller.login);
 
 // Protected route for profile
 userRouter.get("/profile", authenticateToken, usercontroller.getProfile);
-userRouter.patch("/profile/update", authenticateToken, usercontroller.updateUser);
-userRouter.delete("/profile/delete", authenticateToken, usercontroller.deleteUser);
+userRouter.get(
+  "/searchUser",
+  authenticateToken,
+  usercontroller.getUserByUsername,
+);
+userRouter.patch(
+  "/profile/update",
+  authenticateToken,
+  usercontroller.updateUser,
+);
+userRouter.delete(
+  "/profile/delete",
+  authenticateToken,
+  usercontroller.deleteUser,
+);
+
+userRouter.get(
+  "/profileStat",
+  authenticateToken,
+  usercontroller.getProfileStat,
+);
 
 module.exports = userRouter;
