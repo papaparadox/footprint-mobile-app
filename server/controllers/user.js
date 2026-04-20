@@ -146,10 +146,30 @@ async function deleteUser(req, res) {
   }
 }
 
+async function getPublicProfile(req, res) {
+  try {
+    const profile = await User.getPublicProfile(req.params.token);
+    res.status(200).json(profile);
+  } catch (err) {
+    res.status(404).json({ err: err.message });
+  }
+}
+
+async function getMyPublicToken(req, res) {
+  try {
+    const token = await User.getPublicToken(req.user.id);
+    res.status(200).json({ public_token: token });
+  } catch (err) {
+    res.status(404).json({ err: err.message });
+  }
+}
+
 module.exports = {
   register,
   login,
   getProfile,
   updateUser,
   deleteUser,
+  getPublicProfile,
+  getMyPublicToken,
 };

@@ -5,13 +5,37 @@ import {
   StyleSheet,
   ScrollView,
   Image,
+  Pressable,
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { getProfile } from "../services/userService";
 import { getStats } from "../services/statsService";
 import { getTripsByUser } from "../services/tripService";
+
+const USER = {
+  name: "Maya Reyes",
+  avatar: null, // replace with { uri: '...' }
+  about:
+    "Nomadic soul on the lookout for serene sports, rich cultures and luxurious hideaways.",
+  countries: 12,
+  cities: 28,
+  trips: 8,
+  worldExplored: 8,
+  level: 3,
+  levelLabel: "Explorer",
+  levelProgress: 0.7,
+};
+
+const TRIPS = [
+  { id: 1, title: "Landmark Hunter" },
+  { id: 2, title: "Landmark Hunter" },
+  { id: 3, title: "Landmark Hunter" },
+];
+
+const MEMORIES = [null, null, null];
 
 function Avatar({ source }) {
   return (
@@ -73,6 +97,7 @@ function TripCard({ title }) {
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { isAuthenticated, isLoading: authLoading, signOut } = useAuth();
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState(null);
@@ -149,6 +174,14 @@ export default function ProfilePage() {
         <StatPill emoji='✈️' value={trips.length} label='Trips' />
       </View>
 
+      <Pressable
+        style={styles.shareButton}
+        onPress={() => router.push("/share")}
+      >
+        <Text style={styles.shareButtonText}>🔗 Share Profile</Text>
+      </Pressable>
+
+      <WorldCoverageCard percent={USER.worldExplored} />
       <WorldCoverageCard percent={worldPercent} />
 
       <Text style={styles.sectionTitle}>Featured Trips</Text>
@@ -365,6 +398,20 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: COLOURS.danger,
     alignItems: "center",
+  },
+  shareButton: {
+    backgroundColor: COLOURS.accentLight,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: COLOURS.accent,
+  },
+  shareButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLOURS.accent,
   },
   logoutText: { fontSize: 14, fontWeight: "600", color: COLOURS.danger },
 });

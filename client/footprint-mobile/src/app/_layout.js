@@ -88,6 +88,28 @@ function RootLayout() {
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="registration"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+        name="login"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+      name="share"
+      options={{
+        href:null,
+      }}
+      />
+      
     </Tabs>
   );
 }

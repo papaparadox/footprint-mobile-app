@@ -11,7 +11,7 @@ function extractError(error) {
 export async function getProfile() {
   try {
     const response = await api.get("/profile");
-    return response.data;
+    return response.data.user;
   } catch (error) {
     throw new Error(extractError(error));
   }
