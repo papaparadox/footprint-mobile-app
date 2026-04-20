@@ -13,19 +13,14 @@ export default function LoginScreen() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
-
-  function validateEmail(email) {
-    return /\S+@\S+\.\S+/.test(email);
-  }
 
   function validateForm() {
     const nextErrors = {};
 
     if (!form.email.trim()) {
       nextErrors.email = "Email is required.";
-    } else if (!validateEmail(form.email)) {
+    } else if (!/\S+@\S+\.\S+/.test(form.email)) {
       nextErrors.email = "Enter a valid email address.";
     }
 
@@ -41,8 +36,6 @@ export default function LoginScreen() {
 
   async function handleLogin() {
     setServerError("");
-    setSuccessMessage("");
-
     if (!validateForm()) return;
 
     try {
@@ -92,10 +85,6 @@ export default function LoginScreen() {
 
         {serverError ? (
           <Text style={styles.serverError}>{serverError}</Text>
-        ) : null}
-
-        {successMessage ? (
-          <Text style={styles.successMessage}>{successMessage}</Text>
         ) : null}
 
         <PrimaryButton
@@ -158,7 +147,6 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   serverError: { marginBottom: 12, fontSize: 12, color: COLOURS.danger },
-  successMessage: { marginBottom: 12, fontSize: 12, color: COLOURS.accent },
   footer: {
     marginTop: 16,
     flexDirection: "row",
