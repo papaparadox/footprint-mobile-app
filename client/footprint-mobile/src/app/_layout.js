@@ -1,12 +1,35 @@
-// import { Stack } from "expo-router";
-
-// export default function Layout() {
-//   return <Stack />;
-// }
-import { Tabs } from "expo-router";
+import { Tabs, Stack } from "expo-router";
+import { View, ActivityIndicator } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { AuthProvider, useAuth } from "../context/AuthContext";
 
-export default function Layout() {
+function RootLayout() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#F5F0E8",
+        }}
+      >
+        <ActivityIndicator size='large' color='#C47B2B' />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name='login' />
+        <Stack.Screen name='registration' />
+      </Stack>
+    );
+  }
+
   return (
     <Tabs
       screenOptions={{
@@ -30,41 +53,38 @@ export default function Layout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name='index'
         options={{
           title: "Home",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+            <Ionicons name='home-outline' size={size} color={color} />
           ),
         }}
       />
-
       <Tabs.Screen
-        name="countries"
+        name='countries'
         options={{
           title: "Countries",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="globe-outline" size={size} color={color} />
+            <Ionicons name='globe-outline' size={size} color={color} />
           ),
         }}
       />
-
       <Tabs.Screen
-        name="trips"
+        name='trips'
         options={{
           title: "Trips",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="airplane-outline" size={size} color={color} />
+            <Ionicons name='airplane-outline' size={size} color={color} />
           ),
         }}
       />
-
       <Tabs.Screen
-        name="profile"
+        name='profile'
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+            <Ionicons name='person-outline' size={size} color={color} />
           ),
         }}
       />
@@ -91,5 +111,13 @@ export default function Layout() {
       />
       
     </Tabs>
+  );
+}
+
+export default function Layout() {
+  return (
+    <AuthProvider>
+      <RootLayout />
+    </AuthProvider>
   );
 }
