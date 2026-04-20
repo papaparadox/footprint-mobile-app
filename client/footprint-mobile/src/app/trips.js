@@ -5,8 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
-
-// Dummy Data
+import { useRouter } from "expo-router";
 
 const COLOURS = {
   bg: "#F5F0E8",
@@ -37,11 +36,11 @@ const TRIPS = [
   },
 ];
 
-export default function TripsPage({ navigation }) {
+export default function TripsPage() {
+  const router = useRouter();
+
   const handleTripPress = (trip) => {
-    if (navigation) {
-      navigation.navigate("TripDetail", { trip });
-    }
+    router.push(`/trip/${trip.id}`);
   };
 
   return (
