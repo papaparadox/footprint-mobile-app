@@ -1,17 +1,16 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { Link, router } from "expo-router";
+import { Link } from "expo-router";
 import FormInput from "../components/FormInput";
 import PrimaryButton from "../components/PrimaryButton";
 import COLOURS from "../constants/colours";
 import { loginUser } from "../services/authService";
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginScreen() {
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
+  const { signIn } = useAuth();
 
+  const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -48,13 +47,8 @@ export default function LoginScreen() {
 
     try {
       setLoading(true);
-
       const data = await loginUser(form.email.trim(), form.password);
-
-      setSuccessMessage("Login successful.");
-      console.log("Login response:", data);
-
-      router.replace("countries");
+      await signIn(data.token);
     } catch (error) {
       setServerError(error.message);
     } finally {
@@ -78,21 +72,20 @@ export default function LoginScreen() {
 
       <View style={styles.formCard}>
         <FormInput
-          label="Email"
+          label='Email'
           value={form.email}
           onChangeText={(text) => setForm((prev) => ({ ...prev, email: text }))}
-          placeholder="maya@example.com"
-          keyboardType="email-address"
+          placeholder='maya@example.com'
+          keyboardType='email-address'
           error={errors.email}
         />
-
         <FormInput
-          label="Password"
+          label='Password'
           value={form.password}
           onChangeText={(text) =>
             setForm((prev) => ({ ...prev, password: text }))
           }
-          placeholder="Enter password"
+          placeholder='Enter password'
           secureTextEntry
           error={errors.password}
         />
@@ -111,8 +104,8 @@ export default function LoginScreen() {
         />
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Don’t have an account? </Text>
-          <Link href="/registration" asChild>
+          <Text style={styles.footerText}>Don't have an account? </Text>
+          <Link href='/registration' asChild>
             <Text style={styles.registerLink}>Register</Text>
           </Link>
         </View>
@@ -122,15 +115,8 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: COLOURS.bg,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 56,
-    paddingBottom: 40,
-  },
+  screen: { flex: 1, backgroundColor: COLOURS.bg },
+  scrollContent: { paddingHorizontal: 20, paddingTop: 56, paddingBottom: 40 },
   heroCard: {
     backgroundColor: COLOURS.card,
     borderRadius: 18,
@@ -158,11 +144,7 @@ const styles = StyleSheet.create({
     color: COLOURS.text,
     marginBottom: 6,
   },
-  heroSubtitle: {
-    fontSize: 14,
-    color: COLOURS.textSoft,
-    lineHeight: 20,
-  },
+  heroSubtitle: { fontSize: 14, color: COLOURS.textSoft, lineHeight: 20 },
   formCard: {
     backgroundColor: COLOURS.card,
     borderRadius: 18,
@@ -175,29 +157,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 1,
   },
-  serverError: {
-    marginBottom: 12,
-    fontSize: 12,
-    color: COLOURS.danger,
-  },
-  successMessage: {
-    marginBottom: 12,
-    fontSize: 12,
-    color: COLOURS.accent,
-  },
+  serverError: { marginBottom: 12, fontSize: 12, color: COLOURS.danger },
+  successMessage: { marginBottom: 12, fontSize: 12, color: COLOURS.accent },
   footer: {
     marginTop: 16,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
   },
-  footerText: {
-    fontSize: 13,
-    color: COLOURS.textSoft,
-  },
-  registerLink: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: COLOURS.accent,
-  },
+  footerText: { fontSize: 13, color: COLOURS.textSoft },
+  registerLink: { fontSize: 13, fontWeight: "700", color: COLOURS.accent },
 });
