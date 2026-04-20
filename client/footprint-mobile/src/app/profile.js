@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Image, Pressable } from "react-native";
+import { userRouter } from "expo-router";
 
 const USER = {
   name: "Maya Reyes",
@@ -81,6 +82,7 @@ function TripCard({ title }) {
   );
 }
 export default function ProfilePage() {
+  const router = userRouter();
   return (
     <ScrollView
       style={styles.screen}
@@ -101,6 +103,13 @@ export default function ProfilePage() {
         <StatPill emoji='📊' value={USER.cities} label='Cities' />
         <StatPill emoji='✈️' value={USER.trips} label='Trips' />
       </View>
+
+      <Pressable
+        style={styles.shareButton}
+        onPress={() => router.push("/share")}
+      >
+        <Text style={styles.shareButtonText}>🔗 Share Profile</Text>
+      </Pressable>
 
       <WorldCoverageCard percent={USER.worldExplored} />
 
@@ -335,5 +344,19 @@ const styles = StyleSheet.create({
     height: 90,
     backgroundColor: COLOURS.border,
     borderRadius: 12,
+  },
+  shareButton: {
+    backgroundColor: COLOURS.accentLight,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: COLOURS.accent,
+  },
+  shareButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLOURS.accent,
   },
 });

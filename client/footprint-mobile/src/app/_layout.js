@@ -82,6 +82,14 @@ export default function Layout() {
           href: null,
         }}
       />
+
+      <Tabs.Screen
+      name="share"
+      options={{
+        href:null,
+      }}
+      />
+      
     </Tabs>
   );
 }
