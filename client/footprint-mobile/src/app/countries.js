@@ -41,14 +41,13 @@ export default function CountriesPage() {
 
         console.log("COUNTRY STATUS:", response.status);
 
-        const text = await response.text();
-        console.log("COUNTRY RESPONSE:", text);
+        const data = await response.json();
+        console.log("COUNTRY RESPONSE:", data);
 
         if (!response.ok) {
-          throw new Error(`Failed with status ${response.status}`);
+          throw new Error(data.error || `Failed with status ${response.status}`);
         }
 
-        const data = JSON.parse(text);
         setAllCountries(data);
       } catch (error) {
         console.log("Fetch countries error:", error);
@@ -106,33 +105,20 @@ export default function CountriesPage() {
       const failedCountries = [];
 
       for (const country of matchedCountries) {
-        // const response = await fetch(`${API_BASE_URL}/visited`, {
-        //   method: "POST",
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //     Authorization: `Bearer ${token}`,
-        //   },
-        //   body: JSON.stringify({
-        //     country_id: country.id,
-        //   }),
-        // });
-        const response = await fetch(`${API_BASE_URL}/country`, {
-  method: "GET",
-  headers: {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  },
-});
+        const response = await fetch(`${API_BASE_URL}/visited`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            country_id: country.id,
+          }),
+        });
 
-const data = await response.json();
-console.log("COUNTRY STATUS:", response.status);
-console.log("COUNTRY RESPONSE:", data);
-
-if (!response.ok) {
-  throw new Error(data.error || `Failed with status ${response.status}`);
-}
-
-setAllCountries(data);
+        const data = await response.json();
+        console.log("SAVE STATUS:", response.status);
+        console.log("SAVE RESPONSE:", data);
 
         if (!response.ok) {
           failedCountries.push(country.name);
