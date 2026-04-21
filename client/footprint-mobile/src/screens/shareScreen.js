@@ -128,7 +128,7 @@ export default function ShareScreen() {
                 onPress={handleShareImage}
                 disabled={sharing}
                 >
-                <Text style={styles.btnIcon}>🖼️</Text>
+                <Text style={styles.btnIcon}></Text>
                 <Text style={styles.btnTextPrimary}>
                     {sharing ? "Saving..." : "Image"}
                 </Text>
@@ -138,7 +138,7 @@ export default function ShareScreen() {
                 style={[styles.btn, styles.btnSecondary]}
                 onPress={handleShareLink}
                 >
-                <Text style={styles.btnIcon}>🔗</Text>
+                <Text style={styles.btnIcon}></Text>
                 <Text style={styles.btnTextSecondary}>Link</Text>
                 </Pressable>
 
@@ -146,7 +146,7 @@ export default function ShareScreen() {
                 style={[styles.btn, styles.btnOutline]}
                 onPress={handleCopyLink}
                 >
-                <Text style={styles.btnIcon}>📋</Text>
+                <Text style={styles.btnIcon}></Text>
                 <Text style={styles.btnTextOutline}>Copy Link</Text>
                 </Pressable>
             </View>
