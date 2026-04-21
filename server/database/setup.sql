@@ -59,3 +59,14 @@ CREATE TABLE IF NOT EXISTS trips_images (
     caption TEXT,
     uploaded_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS friendships (
+  id SERIAL PRIMARY KEY,
+  requester_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  receiver_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'accepted', 'declined')),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT no_self_friendship CHECK (requester_id <> receiver_id),
+  CONSTRAINT unique_friend_pair UNIQUE (requester_id, receiver_id)
+);
