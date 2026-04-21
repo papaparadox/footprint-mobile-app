@@ -16,6 +16,12 @@ userRouter.get(
   authenticateToken,
   usercontroller.getUserByUsername,
 );
+
+userRouter.get(
+  "/profileStat",
+  authenticateToken,
+  usercontroller.getProfileStat,
+);
 userRouter.patch(
   "/profile/update",
   authenticateToken,
@@ -26,14 +32,10 @@ userRouter.delete(
   authenticateToken,
   usercontroller.deleteUser,
 );
-
 userRouter.get(
-  "/profileStat",
+  "/profile/share-token",
   authenticateToken,
-  usercontroller.getProfileStat,
+  usercontroller.getMyPublicToken,
 );
-userRouter.patch("/profile/update", authenticateToken, usercontroller.updateUser);
-userRouter.delete("/profile/delete", authenticateToken, usercontroller.deleteUser);
-userRouter.get("/profile/share-token", authenticateToken, usercontroller.getMyPublicToken);
 
 module.exports = userRouter;
