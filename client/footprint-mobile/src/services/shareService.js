@@ -1,7 +1,7 @@
 import * as Sharing from "expo-sharing";
 import * as Clipboard from "expo-clipboard";
 import { captureRef } from "react-native-view-shot";
-import { Alert } from "react-native";
+import { Alert, Share } from "react-native";
 
 const BASE_URL = "https://footprint-mobile-app.onrender.com";
 
@@ -34,22 +34,16 @@ export async function shareAsImage(cardRef) {
 }
 
 export async function shareAsLink(shareToken) {
-    try {
-        const link = buildShareLink(shareToken);
-
-        const isAvailable = await Sharing.isAvailableAsync();
-        if (!isAvailable) {
-            await copyLink(shareToken);
-            return;
-        }
-
-        await Sharing.shareAsync(link, {
-            dialogTitle: "Share your footprint trip",
-        });
-    } catch (error) {
-        console.error("Share link error:", error);
-        Alert.alert("Error", "Could not share link. Please try again!");
-    }
+  try {
+    const link = buildShareLink(shareToken);
+    await Share.share({
+      message: `Check out my Footprint travel stats! ${link}`,
+      url: link,
+    });
+  } catch (error) {
+    console.error("Share link error:", error);
+    Alert.alert("Error", "Could not share link. Please try again!");
+  }
 }
 
 export async function copyLink(shareToken) {
