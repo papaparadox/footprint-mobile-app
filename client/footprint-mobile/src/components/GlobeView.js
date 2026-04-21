@@ -166,25 +166,25 @@ const html = `
           .polygonCapColor((polygon) => {
             const countryName = polygon.properties.ADMIN;
             return isSelected(countryName)
-                ? 'rgba(34, 197, 94, 0.9)'
-                : 'rgba(0, 0, 0, 0)';
-            })
-            .polygonSideColor((polygon) => {
+              ? 'rgba(34, 197, 94, 0.9)'
+              : 'rgba(0, 0, 0, 0)';
+          })
+          .polygonSideColor((polygon) => {
             const countryName = polygon.properties.ADMIN;
             return isSelected(countryName)
-                ? 'rgba(34, 197, 94, 0.35)'
-                : 'rgba(0, 0, 0, 0)';
-            })
-            .polygonStrokeColor((polygon) => {
+              ? 'rgba(34, 197, 94, 0.35)'
+              : 'rgba(0, 0, 0, 0)';
+          })
+          .polygonStrokeColor((polygon) => {
             const countryName = polygon.properties.ADMIN;
             return isSelected(countryName)
-                ? '#ffffff'
-                : 'rgba(0, 0, 0, 0)';
-            })
-            .polygonAltitude((polygon) => {
+              ? '#ffffff'
+              : 'rgba(0, 0, 0, 0)';
+          })
+          .polygonAltitude((polygon) => {
             const countryName = polygon.properties.ADMIN;
             return isSelected(countryName) ? 0.03 : 0;
-            })
+          })
           .polygonLabel((d) => d.properties.ADMIN)
           .onPolygonClick((polygon) => {
             window.ReactNativeWebView.postMessage(
@@ -197,7 +197,7 @@ const html = `
       }
 
       function updateSelectedCountries(nextSelectedCountries) {
-        selectedCountries = nextSelectedCountries;
+        selectedCountries = nextSelectedCountries || [];
         applyCountryStyles();
       }
 
@@ -219,6 +219,11 @@ const html = `
         .then(countries => {
           countriesData = countries.features;
           applyCountryStyles();
+          window.ReactNativeWebView.postMessage(
+            JSON.stringify({
+              type: 'globe-ready'
+            })
+          );
         })
         .catch(err => {
           window.ReactNativeWebView.postMessage(
@@ -236,15 +241,20 @@ const html = `
 export default function GlobeView({ onMessage, selectedCountries = [] }) {
   const webViewRef = useRef(null);
 
-  useEffect(() => {
-    if (!webViewRef.current) return;
-
+  const injectSelectedCountries = () => {
     const script = `
       window.updateSelectedCountries(${JSON.stringify(selectedCountries)});
       true;
     `;
+    webViewRef.current?.injectJavaScript(script);
+  };
 
-    webViewRef.current.injectJavaScript(script);
+  const handleWebViewLoad = () => {
+    injectSelectedCountries();
+  };
+
+  useEffect(() => {
+    injectSelectedCountries();
   }, [selectedCountries]);
 
   return (
@@ -256,6 +266,7 @@ export default function GlobeView({ onMessage, selectedCountries = [] }) {
         javaScriptEnabled
         domStorageEnabled
         onMessage={onMessage}
+        onLoad={handleWebViewLoad}
         style={styles.webview}
       />
     </View>

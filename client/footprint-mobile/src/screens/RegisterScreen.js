@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useRouter } from "expo-router";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { Link } from "expo-router";
 import FormInput from "../components/FormInput";
@@ -8,6 +9,7 @@ import User from "../models/User";
 import { registerUser } from "../services/authService";
 
 export default function RegisterScreen() {
+  const router = useRouter();
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -74,6 +76,9 @@ export default function RegisterScreen() {
 
       setSuccessMessage("Account created successfully.");
       console.log("Register response:", data);
+      setTimeout(() => {
+        router.replace("/login");
+      }, 1000);
     } catch (error) {
       setServerError(error.message);
     } finally {
