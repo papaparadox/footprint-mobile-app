@@ -16,3 +16,11 @@ export async function getProfile() {
     throw new Error(extractError(error));
   }
 }
+export async function updateProfile(updates) {
+  try {
+    const response = await api.patch("/profile/update", updates);
+    return response.data;
+  } catch (error) {
+    throw new Error(extractError(error));
+  }
+}

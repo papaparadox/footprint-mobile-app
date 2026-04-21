@@ -1,28 +1,66 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   Pressable,
+  ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
 import FormInput from "../components/FormInput";
 import PrimaryButton from "../components/PrimaryButton";
 import COLOURS from "../constants/colours";
+import { updateProfile, getProfile } from "../services/userService";
 
 export default function EditProfileScreen() {
   const [form, setForm] = useState({
-    username: "maya_reyes",
-    email: "maya@example.com",
-    home_country: "Spain",
+    username: "",
+    email: "",
+    home_country: "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
 
+  const [originalProfile, setOriginalProfile] = useState({
+    username: "",
+    email: "",
+    home_country: "",
+  });
+
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState("");
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
+
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const data = await getProfile();
+
+        const profileData = {
+          username: data.user?.username || "",
+          email: data.user?.email || "",
+          home_country: data.user?.home_country || "",
+        };
+
+        setForm((prev) => ({
+          ...prev,
+          ...profileData,
+        }));
+
+        setOriginalProfile(profileData);
+      } catch (error) {
+        setServerError(error.message);
+      } finally {
+        setInitialLoading(false);
+      }
+    }
+
+    loadProfile();
+  }, []);
 
   function validateEmail(email) {
     return /\S+@\S+\.\S+/.test(email);
@@ -70,17 +108,78 @@ export default function EditProfileScreen() {
     return Object.keys(nextErrors).length === 0;
   }
 
-  function handleSave() {
+  async function handleSave() {
     setSuccessMessage("");
+    setServerError("");
 
     if (!validateForm()) return;
 
-    console.log("Updated profile:", form);
-    setSuccessMessage("Profile updated successfully.");
+    const payload = {};
+
+    if (form.username.trim() !== originalProfile.username) {
+      payload.username = form.username.trim();
+    }
+
+    if (form.email.trim() !== originalProfile.email) {
+      payload.email = form.email.trim();
+    }
+
+    if (form.home_country.trim() !== originalProfile.home_country) {
+      payload.home_country = form.home_country.trim();
+    }
+
+    if (form.newPassword.trim()) {
+      payload.password = form.newPassword.trim();
+    }
+
+    if (Object.keys(payload).length === 0) {
+      setServerError("No changes to save.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const data = await updateProfile(payload);
+
+      setSuccessMessage("Profile updated successfully.");
+
+      const updatedProfile = {
+        username: payload.username ?? originalProfile.username,
+        email: payload.email ?? originalProfile.email,
+        home_country: payload.home_country ?? originalProfile.home_country,
+      };
+
+      setOriginalProfile(updatedProfile);
+
+      setForm((prev) => ({
+        ...prev,
+        ...updatedProfile,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
+
+      setTimeout(() => {
+        router.back();
+      }, 800);
+    } catch (error) {
+      setServerError(error.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleCancel() {
     router.back();
+  }
+
+  if (initialLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={COLOURS.accent} />
+      </View>
+    );
   }
 
   return (
@@ -123,9 +222,7 @@ export default function EditProfileScreen() {
         <FormInput
           label="Email"
           value={form.email}
-          onChangeText={(text) =>
-            setForm((prev) => ({ ...prev, email: text }))
-          }
+          onChangeText={(text) => setForm((prev) => ({ ...prev, email: text }))}
           placeholder="maya@example.com"
           keyboardType="email-address"
           error={errors.email}
@@ -177,11 +274,18 @@ export default function EditProfileScreen() {
           error={errors.confirmPassword}
         />
 
+        {serverError ? (
+          <Text style={styles.serverError}>{serverError}</Text>
+        ) : null}
+
         {successMessage ? (
           <Text style={styles.successMessage}>{successMessage}</Text>
         ) : null}
 
-        <PrimaryButton label="Save Changes" onPress={handleSave} />
+        <PrimaryButton
+          label={loading ? "Saving..." : "Save Changes"}
+          onPress={handleSave}
+        />
 
         <Pressable style={styles.cancelButton} onPress={handleCancel}>
           <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -194,6 +298,12 @@ export default function EditProfileScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: COLOURS.bg,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: COLOURS.bg,
   },
   scrollContent: {
@@ -289,6 +399,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: COLOURS.text,
+  },
+  serverError: {
+    marginBottom: 12,
+    fontSize: 12,
+    color: COLOURS.danger || "#C0392B",
   },
   successMessage: {
     marginBottom: 12,
