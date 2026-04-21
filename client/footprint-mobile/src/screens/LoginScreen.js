@@ -6,8 +6,10 @@ import PrimaryButton from "../components/PrimaryButton";
 import COLOURS from "../constants/colours";
 import { loginUser } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
+import { useRouter } from "expo-router";
 
 export default function LoginScreen() {
+  const router = useRouter();
   const { signIn } = useAuth();
 
   const [form, setForm] = useState({ email: "", password: "" });
@@ -42,6 +44,7 @@ export default function LoginScreen() {
       setLoading(true);
       const data = await loginUser(form.email.trim(), form.password);
       await signIn(data.token);
+      router.replace("/countries");
     } catch (error) {
       setServerError(error.message);
     } finally {
@@ -65,20 +68,20 @@ export default function LoginScreen() {
 
       <View style={styles.formCard}>
         <FormInput
-          label='Email'
+          label="Email"
           value={form.email}
           onChangeText={(text) => setForm((prev) => ({ ...prev, email: text }))}
-          placeholder='maya@example.com'
-          keyboardType='email-address'
+          placeholder="maya@example.com"
+          keyboardType="email-address"
           error={errors.email}
         />
         <FormInput
-          label='Password'
+          label="Password"
           value={form.password}
           onChangeText={(text) =>
             setForm((prev) => ({ ...prev, password: text }))
           }
-          placeholder='Enter password'
+          placeholder="Enter password"
           secureTextEntry
           error={errors.password}
         />
@@ -94,7 +97,7 @@ export default function LoginScreen() {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>Don't have an account? </Text>
-          <Link href='/registration' asChild>
+          <Link href="/registration" asChild>
             <Text style={styles.registerLink}>Register</Text>
           </Link>
         </View>

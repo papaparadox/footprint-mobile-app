@@ -136,7 +136,7 @@ export default function ProfilePage() {
   if (authLoading || profileLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size='large' color={COLOURS.accent} />
+        <ActivityIndicator size="large" color={COLOURS.accent} />
       </View>
     );
   }
@@ -162,24 +162,33 @@ export default function ProfilePage() {
 
       <View style={styles.statsRow}>
         <StatPill
-          emoji='🌍'
+          emoji="🌍"
           value={stats?.countries_visited ?? 0}
-          label='Countries'
+          label="Countries"
         />
         <StatPill
-          emoji='📊'
+          emoji="📊"
           value={stats?.cities_visited ?? 0}
-          label='Cities'
+          label="Cities"
         />
-        <StatPill emoji='✈️' value={trips.length} label='Trips' />
+        <StatPill emoji="✈️" value={trips.length} label="Trips" />
       </View>
 
-      <Pressable
-        style={styles.shareButton}
-        onPress={() => router.push("/share")}
-      >
-        <Text style={styles.shareButtonText}>🔗 Share Profile</Text>
-      </Pressable>
+      <View style={styles.actionButtonsRow}>
+        <Pressable
+          style={styles.shareButton}
+          onPress={() => router.push("/share")}
+        >
+          <Text style={styles.shareButtonText}>🔗 Share Profile</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.editButton}
+          onPress={() => router.push("/editProfile")}
+        >
+          <Text style={styles.editButtonText}>Update Profile</Text>
+        </Pressable>
+      </View>
 
       <WorldCoverageCard percent={USER.worldExplored} />
       <WorldCoverageCard percent={worldPercent} />
@@ -400,11 +409,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   shareButton: {
+    flex: 1,
     backgroundColor: COLOURS.accentLight,
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: "center",
-    marginBottom: 18,
     borderWidth: 1,
     borderColor: COLOURS.accent,
   },
@@ -412,6 +421,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: COLOURS.accent,
+  },
+  actionButtonsRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 18,
+  },
+
+  editButton: {
+    flex: 1,
+    backgroundColor: COLOURS.card,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: COLOURS.border,
+  },
+
+  editButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLOURS.text,
   },
   logoutText: { fontSize: 14, fontWeight: "600", color: COLOURS.danger },
 });
