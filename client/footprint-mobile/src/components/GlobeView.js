@@ -235,16 +235,30 @@ const html = `
 
 export default function GlobeView({ onMessage, selectedCountries = [] }) {
   const webViewRef = useRef(null);
+  const handleWebViewLoad = () => {
+    if (selectedCountries.length === 0) return;
+    
+    setTimeout(() => {
+      const script = `
+        window.updateSelectedCountries(${JSON.stringify(selectedCountries)});
+        true;
+      `;
+      webViewRef.current?.injectJavaScript(script);
+    }, 1000);
+  };
 
   useEffect(() => {
-    if (!webViewRef.current) return;
+    if (!webViewRef.current || selectedCountries.length === 0) return;
 
-    const script = `
-      window.updateSelectedCountries(${JSON.stringify(selectedCountries)});
-      true;
-    `;
+    const timer = setTimeout(() => {
+      const script = `
+        window.updateSelectedCountries(${JSON.stringify(selectedCountries)});
+        true;
+      `;
+      webViewRef.current.injectJavaScript(script);
+    }, 3000);
 
-    webViewRef.current.injectJavaScript(script);
+    return () => clearTimeout(timer);
   }, [selectedCountries]);
 
   return (
@@ -256,6 +270,7 @@ export default function GlobeView({ onMessage, selectedCountries = [] }) {
         javaScriptEnabled
         domStorageEnabled
         onMessage={onMessage}
+        onLoad={handleWebViewLoad}
         style={styles.webview}
       />
     </View>
