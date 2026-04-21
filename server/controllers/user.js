@@ -211,6 +211,9 @@ async function getProfileStat(req, res) {
     });
   } catch (err) {
     res.status(500).json({ err: err.message });
+  }
+}
+
 async function getPublicProfile(req, res) {
   try {
     const profile = await User.getPublicProfile(req.params.token);
