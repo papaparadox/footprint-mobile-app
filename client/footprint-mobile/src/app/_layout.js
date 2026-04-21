@@ -114,6 +114,10 @@ function RootLayout() {
         name="trip/[id]"
         options={{ href: null }}
       />
+            <Tabs.Screen
+        name="editProfile"
+        options={{ href: null }}
+      />
       
     </Tabs>
   );
