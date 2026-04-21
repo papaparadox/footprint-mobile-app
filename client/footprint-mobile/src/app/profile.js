@@ -89,10 +89,7 @@ function WorldCoverageCard({ percent, visitedCountries }) {
         <Text style={styles.mapPercent}>{percent}%</Text>
       </View>
 
-      <GlobeView
-        selectedCountries={visitedCountries}
-        onMessage={() => {}}
-      />
+      <GlobeView selectedCountries={visitedCountries} onMessage={() => {}} />
 
       <View style={styles.progressBarTrack}>
         <View style={[styles.progressBarFill, { width: `${percent}%` }]} />
@@ -135,22 +132,26 @@ export default function ProfilePage() {
         const userData = await getProfile();
         setUser(userData);
 
-        const [statsResult, tripsResult, visitedResult] = await Promise.allSettled([
-          getStats(userData.id),
-          getTripsByUser(userData.id),
-          getVisitedByUser(userData.id),
-        ]);
+        const [statsResult, tripsResult, visitedResult] =
+          await Promise.allSettled([
+            getStats(userData.id),
+            getTripsByUser(userData.id),
+            getVisitedByUser(userData.id),
+          ]);
 
         console.log("statsResult:", JSON.stringify(statsResult));
-        console.log("tripsResult:", JSON.stringify(tripsResult));   
+        console.log("tripsResult:", JSON.stringify(tripsResult));
 
         if (statsResult.status === "fulfilled") {
           setStats(statsResult.value.stats);
           setRecentVisit(statsResult.value.recentVisit);
         }
-        if (tripsResult.status === "fulfilled") setTrips(tripsResult.value ?? []);
+        if (tripsResult.status === "fulfilled")
+          setTrips(tripsResult.value ?? []);
         if (visitedResult.status === "fulfilled") {
-          const names = [...new Set(visitedResult.value.map((v) => v.country_name))];
+          const names = [
+            ...new Set(visitedResult.value.map((v) => v.country_name)),
+          ];
           console.log("visited country names:", names);
           setVisitedCountries(names);
         }
@@ -177,7 +178,7 @@ export default function ProfilePage() {
   }
 
   const worldPercent = stats?.countries_visited
-    ? Math.round((stats.countries_visited / 195) * 100) 
+    ? Math.round((stats.countries_visited / 195) * 100)
     : 0;
 
   return (
@@ -203,43 +204,66 @@ export default function ProfilePage() {
       </Pressable>
 
       <View style={styles.statsRow}>
-
         <StatPill
           emoji="🌍"
           value={stats?.countries_visited ?? 0}
           label="Countries"
         />
         <StatPill
-          emoji='🌐'
+          emoji="🌐"
           value={stats?.continents_visited ?? 0}
-          label='Continents'
+          label="Continents"
         />
         <StatPill emoji="✈️" value={trips.length} label="Trips" />
       </View>
 
-      {recentVisit && (
-        <View style={styles.recentCard}>
-          <Text style={styles.recentLabel}>Most Recent Visit</Text>
-          <View style={styles.recentRow}>
-            <Image
-              source={{ uri: recentVisit.flag_url.replace("https://flagcdn.com/", "https://flagcdn.com/w80/").replace(".svg", ".png") }}
-              style={styles.recentFlag}
-            />
+      <View style={styles.premiumActionsCard}>
+        <View style={styles.premiumActionsHeader}>
+          <Text style={styles.premiumActionsTitle}>Profile Studio</Text>
+          <Text style={styles.premiumActionsSubtitle}>
+            Share, refine and grow your travel identity
+          </Text>
+        </View>
+
+        <View style={styles.premiumTopRow}>
+          <Pressable
+            style={[styles.premiumActionTile, styles.premiumShareTile]}
+            onPress={() => router.push("/share")}
+          >
+            <Text style={styles.premiumTileTitle}>Share Profile</Text>
+            <Text style={styles.premiumTileSubtitle}>Send your journey</Text>
+          </Pressable>
+
+          <Pressable
+            style={[styles.premiumActionTile, styles.premiumEditTile]}
+            onPress={() => router.push("/editProfile")}
+          >
+            <Text style={styles.premiumTileTitle}>Update Profile</Text>
+            <Text style={styles.premiumTileSubtitle}>Refine your details</Text>
+          </Pressable>
+        </View>
+
+        <Pressable
+          style={styles.premiumFriendsTile}
+          onPress={() => router.push("/friends")}
+        >
+          <View style={styles.premiumFriendsLeft}>
             <View>
-              <Text style={styles.recentCountry}>{recentVisit.country_name}</Text>
-              <Text style={styles.recentDate}>
-                {new Date(recentVisit.date_visited).toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
+              <Text style={styles.premiumFriendsTitle}>Friends</Text>
+              <Text style={styles.premiumFriendsSubtitle}>
+                View requests and connections
               </Text>
             </View>
           </View>
-        </View>
-      )}
 
-      <WorldCoverageCard percent={worldPercent} visitedCountries={visitedCountries} />
+          <View style={styles.premiumBadge}>
+            <Text style={styles.premiumBadgeText}>2</Text>
+          </View>
+        </Pressable>
+      </View>
+
+      <WorldCoverageCard percent={USER.worldExplored} />
+      <WorldCoverageCard percent={worldPercent} />
 
       <Text style={styles.sectionTitle}>Featured Trips</Text>
       <ScrollView
@@ -457,40 +481,143 @@ const styles = StyleSheet.create({
     borderColor: COLOURS.danger,
     alignItems: "center",
   },
-  shareButton: {
-    backgroundColor: COLOURS.accentLight,
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: "center",
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: COLOURS.accent,
-  },
-  shareButtonText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: COLOURS.accent,
-  },
-  actionButtonsRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 18,
-  },
-
-  editButton: {
-    flex: 1,
+  premiumActionsCard: {
     backgroundColor: COLOURS.card,
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: "center",
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 18,
     borderWidth: 1,
     borderColor: COLOURS.border,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
 
-  editButtonText: {
+  premiumActionsHeader: {
+    marginBottom: 14,
+  },
+
+  premiumActionsTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: COLOURS.text,
+    marginBottom: 4,
+  },
+
+  premiumActionsSubtitle: {
+    fontSize: 12,
+    color: COLOURS.textSoft,
+    lineHeight: 18,
+  },
+
+  premiumTopRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 10,
+  },
+
+  premiumActionTile: {
+    flex: 1,
+    minHeight: 118,
+    borderRadius: 18,
+    paddingVertical: 18,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    justifyContent: "space-between",
+  },
+
+  premiumShareTile: {
+    backgroundColor: "#FFF6EA",
+    borderColor: "#F0D9B5",
+  },
+
+  premiumEditTile: {
+    backgroundColor: "#F9EBD3",
+    borderColor: "#E7C796",
+  },
+
+  premiumEmoji: {
+    fontSize: 24,
+    marginBottom: 10,
+  },
+
+  premiumTileTitle: {
     fontSize: 14,
     fontWeight: "700",
     color: COLOURS.text,
+    marginBottom: 4,
+  },
+
+  premiumTileSubtitle: {
+    fontSize: 11,
+    color: COLOURS.textSoft,
+    lineHeight: 16,
+  },
+
+  premiumFriendsTile: {
+    backgroundColor: COLOURS.accent,
+    borderRadius: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: "#A86622",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+
+  premiumFriendsLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  premiumFriendsIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  premiumFriendsEmoji: {
+    fontSize: 20,
+  },
+
+  premiumFriendsTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    marginBottom: 2,
+  },
+
+  premiumFriendsSubtitle: {
+    fontSize: 11,
+    color: "rgba(255,255,255,0.86)",
+  },
+
+  premiumBadge: {
+    minWidth: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 8,
+  },
+
+  premiumBadgeText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: COLOURS.accent,
   },
   logoutText: { fontSize: 14, fontWeight: "600", color: COLOURS.danger },
   recentCard: {

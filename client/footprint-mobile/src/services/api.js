@@ -2,7 +2,7 @@ import axios from "axios";
 import { getToken } from "./tokenService";
 
 const api = axios.create({
-  baseURL: "https://footprint-mobile-app.onrender.com/user",
+  baseURL: "https://footprint-mobile-app.onrender.com/",
   headers: {
     "Content-Type": "application/json",
   },

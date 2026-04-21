@@ -2,7 +2,7 @@ import axios from "axios";
 import { saveToken, removeToken } from "./tokenService";
 
 const API = axios.create({
-  baseURL: "https://footprint-mobile-app.onrender.com/user",
+  baseURL: "https://footprint-mobile-app.onrender.com/",
   headers: { "Content-Type": "application/json" },
   timeout: 90000,
 });
@@ -18,7 +18,7 @@ function extractError(error) {
 
 export async function registerUser(user) {
   try {
-    const response = await API.post("/register", user);
+    const response = await API.post("user/register", user);
     return response.data;
   } catch (error) {
     throw new Error(extractError(error));
@@ -27,7 +27,7 @@ export async function registerUser(user) {
 
 export async function loginUser(email, password) {
   try {
-    const response = await API.post("/login", { email, password });
+    const response = await API.post("user/login", { email, password });
     const token = response.data.token;
     if (token) await saveToken(token);
     return response.data;

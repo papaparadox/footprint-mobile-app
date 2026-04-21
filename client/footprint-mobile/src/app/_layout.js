@@ -1,4 +1,3 @@
-
 import { Tabs, Stack } from "expo-router";
 import { View, ActivityIndicator } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -88,6 +87,11 @@ function RootLayout() {
       <Tabs.Screen name="share" options={{ href: null }} />
       <Tabs.Screen name="trip/[id]" options={{ href: null }} />
       <Tabs.Screen name="editProfile" options={{ href: null }} />
+      <Tabs.Screen name="friends/index" options={{ href: null }} />
+      <Tabs.Screen name="friends/requests" options={{ href: null }} />
+      <Tabs.Screen name="friends/search" options={{ href: null }} />
+      <Tabs.Screen name="friends/[friendId]/compare" options={{ href: null }} />
+      <Tabs.Screen name="friends/[friendId]/profile" options={{ href: null }} />
     </Tabs>
   );
 }
