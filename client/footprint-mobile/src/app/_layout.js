@@ -114,9 +114,16 @@ function RootLayout() {
         name="trip/[id]"
         options={{ href: null }}
       />
+<<<<<<< HEAD
+            <Tabs.Screen
+        name="editProfile"
+        options={{ href: null }}
+      />
+=======
 
       <Tabs.Screen name="home" options={{ href: null }} />
       <Tabs.Screen name="editProfile" options={{ href: null }} />
+>>>>>>> dev
       
     </Tabs>
   );
