@@ -109,6 +109,11 @@ function RootLayout() {
         href:null,
       }}
       />
+
+      <Tabs.Screen
+        name="trip/[id]"
+        options={{ href: null }}
+      />
       
     </Tabs>
   );
