@@ -130,7 +130,7 @@ export default function ShareScreen() {
                 >
                 <Text style={styles.btnIcon}>🖼️</Text>
                 <Text style={styles.btnTextPrimary}>
-                    {sharing ? "Saving..." : "Share as Image"}
+                    {sharing ? "Saving..." : "Image"}
                 </Text>
                 </Pressable>
 
@@ -139,7 +139,7 @@ export default function ShareScreen() {
                 onPress={handleShareLink}
                 >
                 <Text style={styles.btnIcon}>🔗</Text>
-                <Text style={styles.btnTextSecondary}>Share as Link</Text>
+                <Text style={styles.btnTextSecondary}>Link</Text>
                 </Pressable>
 
                 <Pressable

@@ -4,7 +4,9 @@ import COLOURS from "../constants/colours";
 export default function shareCard({ stats, username }) {
     const countries = stats?.countries_visited || 0;
     const continents = stats?.continents_visited || 0;
-    const cities = stats?.cities_visited || 0;
+    const worldPercent = stats?.countries_visited 
+      ? Math.round((parseInt(stats.countries_visited) / 195) * 100)
+      : 0;
 
     return (
         <View style={styles.card}>
@@ -20,18 +22,18 @@ export default function shareCard({ stats, username }) {
 
             <View style={styles.statsRow}>
                 <View style={styles.stat}>
-                <Text style={styles.statValue}>{countries}</Text>
-                <Text style={styles.statLabel}>Countries</Text>
+                  <Text style={styles.statValue}>{countries}</Text>
+                  <Text style={styles.statLabel}>Countries</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.stat}>
-                <Text style={styles.statValue}>{continents}</Text>
-                <Text style={styles.statLabel}>Continents</Text>
+                  <Text style={styles.statValue}>{continents}</Text>
+                  <Text style={styles.statLabel}>Continents</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.stat}>
-                <Text style={styles.statValue}>{cities}</Text>
-                <Text style={styles.statLabel}>Cities</Text>
+                  <Text style={styles.statValue}>{worldPercent}%</Text>
+                  <Text style={styles.statLabel}>Covered</Text>
                 </View>
             </View>
 

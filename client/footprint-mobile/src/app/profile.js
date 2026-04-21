@@ -142,7 +142,7 @@ export default function ProfilePage() {
   }
 
   const worldPercent = stats?.countries_visited
-    ? Math.round((stats.countries_visited / 195) * 100) // may change in the future
+    ? Math.round((stats.countries_visited / 195) * 100) 
     : 0;
 
   return (
