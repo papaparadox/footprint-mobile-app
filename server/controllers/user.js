@@ -291,6 +291,6 @@ module.exports = {
   deleteUser,
   getUserByUsername,
   getProfileStat,
-  getPublicProfile,
+  // getPublicProfile,
   getMyPublicToken,
 };
