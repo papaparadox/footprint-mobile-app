@@ -150,9 +150,9 @@ export default function ProfilePage() {
         }
         if (tripsResult.status === "fulfilled") setTrips(tripsResult.value ?? []);
         if (visitedResult.status === "fulfilled") {
-          const names = visitedResult.value.map((v) => v.country_name);
+          const names = [...new Set(visitedResult.value.map((v) => v.country_name))];
           console.log("visited country names:", names);
-          setVisitedCountries(names)
+          setVisitedCountries(names);
         }
       } catch (err) {
         console.log("fetchAll error:", err.message);
@@ -338,6 +338,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 18,
+    marginTop: 12,
     gap: 8,
   },
   statPill: {
@@ -457,11 +458,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   shareButton: {
-    flex: 1,
     backgroundColor: COLOURS.accentLight,
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: "center",
+    marginBottom: 14,
     borderWidth: 1,
     borderColor: COLOURS.accent,
   },

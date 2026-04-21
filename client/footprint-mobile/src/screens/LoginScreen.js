@@ -44,7 +44,7 @@ export default function LoginScreen() {
       setLoading(true);
       const data = await loginUser(form.email.trim(), form.password);
       await signIn(data.token);
-      router.replace("/countries");
+      // router.replace("/countries");
     } catch (error) {
       setServerError(error.message);
     } finally {
