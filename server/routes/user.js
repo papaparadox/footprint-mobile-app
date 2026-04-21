@@ -11,6 +11,27 @@ userRouter.get("/public/:token", usercontroller.getPublicProfile);
 
 // Protected route for profile
 userRouter.get("/profile", authenticateToken, usercontroller.getProfile);
+userRouter.get(
+  "/searchUser",
+  authenticateToken,
+  usercontroller.getUserByUsername,
+);
+userRouter.patch(
+  "/profile/update",
+  authenticateToken,
+  usercontroller.updateUser,
+);
+userRouter.delete(
+  "/profile/delete",
+  authenticateToken,
+  usercontroller.deleteUser,
+);
+
+userRouter.get(
+  "/profileStat",
+  authenticateToken,
+  usercontroller.getProfileStat,
+);
 userRouter.patch("/profile/update", authenticateToken, usercontroller.updateUser);
 userRouter.delete("/profile/delete", authenticateToken, usercontroller.deleteUser);
 userRouter.get("/profile/share-token", authenticateToken, usercontroller.getMyPublicToken);
