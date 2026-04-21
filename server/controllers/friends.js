@@ -165,42 +165,106 @@ async function compareWithFriend(req, res) {
       return res.status(403).json({ err: "You can only compare with friends" });
     }
 
+    // stats
+    const myStats = await UserStats.getStats(userId);
+    const friendStats = await UserStats.getStats(friendId);
+
+    // visited countries by country_id for overlap comparison
     const myCountriesResult = await db.query(
-      `SELECT country FROM visited_countries WHERE user_id = $1`,
+      `SELECT DISTINCT country_id FROM visited_locations WHERE user_id = $1`,
       [userId],
     );
 
     const friendCountriesResult = await db.query(
-      `SELECT country FROM visited_countries WHERE user_id = $1`,
+      `SELECT DISTINCT country_id FROM visited_locations WHERE user_id = $1`,
       [friendId],
     );
 
-    const myCountries = myCountriesResult.rows.map((row) => row.country);
-    const friendCountries = friendCountriesResult.rows.map(
-      (row) => row.country,
+    const myCountryIds = myCountriesResult.rows.map((row) => row.country_id);
+    const friendCountryIds = friendCountriesResult.rows.map(
+      (row) => row.country_id,
     );
 
-    const commonCountries = myCountries.filter((country) =>
-      friendCountries.includes(country),
+    const commonCountryIds = myCountryIds.filter((countryId) =>
+      friendCountryIds.includes(countryId),
     );
 
-    const onlyMine = myCountries.filter(
-      (country) => !friendCountries.includes(country),
+    const onlyMineIds = myCountryIds.filter(
+      (countryId) => !friendCountryIds.includes(countryId),
     );
 
-    const onlyTheirs = friendCountries.filter(
-      (country) => !myCountries.includes(country),
+    const onlyTheirsIds = friendCountryIds.filter(
+      (countryId) => !myCountryIds.includes(countryId),
+    );
+
+    // optional: fetch country names for nicer frontend response
+    const commonCountriesResult =
+      commonCountryIds.length > 0
+        ? await db.query(
+            `SELECT id, name, iso_code, flag_url
+             FROM countries
+             WHERE id = ANY($1::int[])
+             ORDER BY name ASC`,
+            [commonCountryIds],
+          )
+        : { rows: [] };
+
+    const onlyMineCountriesResult =
+      onlyMineIds.length > 0
+        ? await db.query(
+            `SELECT id, name, iso_code, flag_url
+             FROM countries
+             WHERE id = ANY($1::int[])
+             ORDER BY name ASC`,
+            [onlyMineIds],
+          )
+        : { rows: [] };
+
+    const onlyTheirsCountriesResult =
+      onlyTheirsIds.length > 0
+        ? await db.query(
+            `SELECT id, name, iso_code, flag_url
+             FROM countries
+             WHERE id = ANY($1::int[])
+             ORDER BY name ASC`,
+            [onlyTheirsIds],
+          )
+        : { rows: [] };
+
+    const TOTAL_COUNTRIES = 195;
+
+    const myCountriesVisited = Number(myStats?.countries_visited) || 0;
+    const friendCountriesVisited = Number(friendStats?.countries_visited) || 0;
+
+    const myWorldCoverage = Math.round(
+      (myCountriesVisited / TOTAL_COUNTRIES) * 100,
+    );
+
+    const friendWorldCoverage = Math.round(
+      (friendCountriesVisited / TOTAL_COUNTRIES) * 100,
     );
 
     res.status(200).json({
       success: true,
       comparison: {
-        my_count: myCountries.length,
-        friend_count: friendCountries.length,
-        common_count: commonCountries.length,
-        common_countries: commonCountries,
-        only_mine: onlyMine,
-        only_theirs: onlyTheirs,
+        my_stats: {
+          countries_visited: myCountriesVisited,
+          continents_visited: Number(myStats?.continents_visited) || 0,
+          world_coverage_percent: myWorldCoverage,
+        },
+        friend_stats: {
+          countries_visited: friendCountriesVisited,
+          continents_visited: Number(friendStats?.continents_visited) || 0,
+          world_coverage_percent: friendWorldCoverage,
+        },
+        overlap: {
+          common_count: commonCountriesResult.rows.length,
+          common_countries: commonCountriesResult.rows,
+          only_mine_count: onlyMineCountriesResult.rows.length,
+          only_mine: onlyMineCountriesResult.rows,
+          only_theirs_count: onlyTheirsCountriesResult.rows.length,
+          only_theirs: onlyTheirsCountriesResult.rows,
+        },
       },
     });
   } catch (err) {
@@ -229,6 +293,8 @@ async function getFriendProfile(req, res) {
     const stats = await UserStats.getStats(friendId);
     const continentBreakdown = await UserStats.getContinentBreakdown(friendId);
     const mostRecentVisit = await UserStats.getMostRecentVisit(friendId);
+    const countriesVisited = Number(stats?.countries_visited) || 0;
+    const worldCoveragePercent = Math.round((countriesVisited / 195) * 100);
 
     res.status(200).json({
       success: true,
@@ -241,8 +307,7 @@ async function getFriendProfile(req, res) {
       stats: {
         countries_visited: Number(stats?.countries_visited) || 0,
         continents_visited: Number(stats?.continents_visited) || 0,
-        cities_visited: Number(stats?.cities_visited) || 0,
-        trips_taken: Number(stats?.trips_taken) || 0,
+        world_coverage_percent: myWorldCoverage,
       },
       continent_breakdown: continentBreakdown.map((item) => ({
         continent: item.continent,
