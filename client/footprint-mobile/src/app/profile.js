@@ -14,6 +14,8 @@ import { useAuth } from "../context/AuthContext";
 import { getProfile } from "../services/userService";
 import { getStats } from "../services/statsService";
 import { getTripsByUser } from "../services/tripService";
+import { getVisitedByUser } from "../services/visitedService";
+import GlobeView from "../components/GlobeView";
 
 const USER = {
   name: "Maya Reyes",
@@ -63,22 +65,38 @@ function StatPill({ emoji, value, label }) {
   );
 }
 
-function WorldCoverageCard({ percent }) {
+function WorldCoverageCard({ percent, visitedCountries }) {
   return (
-    <View style={styles.coverageCard}>
-      <View style={styles.coverageHeader}>
-        <Text style={styles.coverageEmoji}>🌐</Text>
-        <Text style={styles.coverageTitle}>World Coverage</Text>
+    // <View style={styles.coverageCard}>
+    //   <View style={styles.coverageHeader}>
+    //     <Text style={styles.coverageEmoji}>🌐</Text>
+    //     <Text style={styles.coverageTitle}>World Coverage</Text>
+    //   </View>
+    //   <View style={styles.miniMapPlaceholder}>
+    //     <Text style={styles.miniMap}>[ Mini Map Card ]</Text>
+    //   </View>
+    //   <Text style={styles.coveragePercent}>
+    //     {percent}% of the world explored
+    //   </Text>
+    //   <View style={styles.progressBarTrack}>
+    //     <View style={[styles.progressBarFill, { width: `${percent}%` }]} />
+    //   </View>
+    // </View>
+    <View style={styles.mapCard}>
+      <View style={styles.mapHeader}>
+        <Text style={styles.mapEmoji}>🌐</Text>
+        <Text style={styles.mapTitle}>World Coverage</Text>
+        <Text style={styles.mapPercent}>{percent}%</Text>
       </View>
-      <View style={styles.miniMapPlaceholder}>
-        <Text style={styles.miniMap}>[ Mini Map Card ]</Text>
+
+      <GlobeView selectedCountries={visitedCountries} onMessage={() => {}} />
+
+      <View style={styles.progressBarTrack}>
+        <View style={[styles.progressBarFill, { width: `${percent}%` }]} />
       </View>
       <Text style={styles.coveragePercent}>
         {percent}% of the world explored
       </Text>
-      <View style={styles.progressBarTrack}>
-        <View style={[styles.progressBarFill, { width: `${percent}%` }]} />
-      </View>
     </View>
   );
 }
@@ -103,6 +121,8 @@ export default function ProfilePage() {
   const [stats, setStats] = useState(null);
   const [trips, setTrips] = useState([]);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [recentVisit, setRecentVisit] = useState(null);
+  const [visitedCountries, setVisitedCountries] = useState([]);
 
   useEffect(() => {
     if (authLoading || !isAuthenticated) return;
@@ -112,15 +132,31 @@ export default function ProfilePage() {
         const userData = await getProfile();
         setUser(userData);
 
-        const [statsResult, tripsResult] = await Promise.allSettled([
-          getStats(userData.id),
-          getTripsByUser(userData.id),
-        ]);
+        const [statsResult, tripsResult, visitedResult] =
+          await Promise.allSettled([
+            getStats(userData.id),
+            getTripsByUser(userData.id),
+            getVisitedByUser(userData.id),
+          ]);
 
-        if (statsResult.status === "fulfilled") setStats(statsResult.value);
+        console.log("statsResult:", JSON.stringify(statsResult));
+        console.log("tripsResult:", JSON.stringify(tripsResult));
+
+        if (statsResult.status === "fulfilled") {
+          setStats(statsResult.value.stats);
+          setRecentVisit(statsResult.value.recentVisit);
+        }
         if (tripsResult.status === "fulfilled")
           setTrips(tripsResult.value ?? []);
-      } catch {
+        if (visitedResult.status === "fulfilled") {
+          const names = [
+            ...new Set(visitedResult.value.map((v) => v.country_name)),
+          ];
+          console.log("visited country names:", names);
+          setVisitedCountries(names);
+        }
+      } catch (err) {
+        console.log("fetchAll error:", err.message);
       } finally {
         setProfileLoading(false);
       }
@@ -160,6 +196,13 @@ export default function ProfilePage() {
         </View>
       </View>
 
+      <Pressable
+        style={styles.shareButton}
+        onPress={() => router.push("/share")}
+      >
+        <Text style={styles.shareButtonText}>Share Profile</Text>
+      </Pressable>
+
       <View style={styles.statsRow}>
         <StatPill
           emoji="🌍"
@@ -167,9 +210,9 @@ export default function ProfilePage() {
           label="Countries"
         />
         <StatPill
-          emoji="📊"
-          value={stats?.cities_visited ?? 0}
-          label="Cities"
+          emoji="🌐"
+          value={stats?.continents_visited ?? 0}
+          label="Continents"
         />
         <StatPill emoji="✈️" value={trips.length} label="Trips" />
       </View>
@@ -269,7 +312,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 56,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   headerRow: {
     flexDirection: "row",
@@ -319,6 +362,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 18,
+    marginTop: 12,
     gap: 8,
   },
   statPill: {
@@ -576,4 +620,79 @@ const styles = StyleSheet.create({
     color: COLOURS.accent,
   },
   logoutText: { fontSize: 14, fontWeight: "600", color: COLOURS.danger },
+  recentCard: {
+    backgroundColor: COLOURS.card,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: COLOURS.border,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  recentLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: COLOURS.accent,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    marginBottom: 10,
+  },
+  recentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  recentFlag: {
+    width: 56,
+    height: 40,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: COLOURS.border,
+    resizeMode: "cover",
+  },
+  recentCountry: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: COLOURS.text,
+    marginBottom: 2,
+  },
+  recentDate: {
+    fontSize: 12,
+    color: COLOURS.textMuted,
+  },
+  mapCard: {
+    backgroundColor: COLOURS.card,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: COLOURS.border,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  mapHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    gap: 6,
+  },
+  mapEmoji: { fontSize: 18 },
+  mapTitle: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "700",
+    color: COLOURS.text,
+  },
+  mapPercent: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: COLOURS.accent,
+  },
 });
