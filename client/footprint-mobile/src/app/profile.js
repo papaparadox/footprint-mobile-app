@@ -1,4 +1,19 @@
-import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  Pressable,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useAuth } from "../context/AuthContext";
+import { getProfile } from "../services/userService";
+import { getStats } from "../services/statsService";
+import { getTripsByUser } from "../services/tripService";
 
 const USER = {
   name: "Maya Reyes",
@@ -30,7 +45,7 @@ function Avatar({ source }) {
           <Image source={source} style={styles.avatarImage} />
         ) : (
           <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarEmoji}>Pic</Text>
+            <Text style={styles.avatarInitial}>👤</Text>
           </View>
         )}
       </View>
@@ -80,7 +95,56 @@ function TripCard({ title }) {
     </View>
   );
 }
+
 export default function ProfilePage() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading, signOut } = useAuth();
+  const [user, setUser] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [trips, setTrips] = useState([]);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
+
+    async function fetchAll() {
+      try {
+        const userData = await getProfile();
+        setUser(userData);
+
+        const [statsResult, tripsResult] = await Promise.allSettled([
+          getStats(userData.id),
+          getTripsByUser(userData.id),
+        ]);
+
+        if (statsResult.status === "fulfilled") setStats(statsResult.value);
+        if (tripsResult.status === "fulfilled")
+          setTrips(tripsResult.value ?? []);
+      } catch {
+      } finally {
+        setProfileLoading(false);
+      }
+    }
+
+    fetchAll();
+  }, [isAuthenticated, authLoading]);
+
+  async function handleLogout() {
+    await signOut();
+  }
+
+  if (authLoading || profileLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size='large' color={COLOURS.accent} />
+      </View>
+    );
+  }
+
+  const worldPercent = stats?.countries_visited
+    ? Math.round((stats.countries_visited / 195) * 100) // may change in the future
+    : 0;
+
   return (
     <ScrollView
       style={styles.screen}
@@ -88,21 +152,37 @@ export default function ProfilePage() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.headerRow}>
-        <Avatar source={USER.avatar} />
+        <Avatar source={null} />
         <View style={styles.headerInfo}>
-          <Text style={styles.headerName}>{USER.name}</Text>
-          <Text style={styles.headerAboutLabel}>About</Text>
-          <Text style={styles.headerAbout}>{USER.about}</Text>
+          <Text style={styles.headerName}>{user?.username}</Text>
+          <Text style={styles.headerAboutLabel}>Home Country</Text>
+          <Text style={styles.headerAbout}>{user?.home_country}</Text>
         </View>
       </View>
 
       <View style={styles.statsRow}>
-        <StatPill emoji='🌍' value={USER.countries} label='Countries' />
-        <StatPill emoji='📊' value={USER.cities} label='Cities' />
-        <StatPill emoji='✈️' value={USER.trips} label='Trips' />
+        <StatPill
+          emoji='🌍'
+          value={stats?.countries_visited ?? 0}
+          label='Countries'
+        />
+        <StatPill
+          emoji='📊'
+          value={stats?.cities_visited ?? 0}
+          label='Cities'
+        />
+        <StatPill emoji='✈️' value={trips.length} label='Trips' />
       </View>
 
+      <Pressable
+        style={styles.shareButton}
+        onPress={() => router.push("/share")}
+      >
+        <Text style={styles.shareButtonText}>🔗 Share Profile</Text>
+      </Pressable>
+
       <WorldCoverageCard percent={USER.worldExplored} />
+      <WorldCoverageCard percent={worldPercent} />
 
       <Text style={styles.sectionTitle}>Featured Trips</Text>
       <ScrollView
@@ -110,10 +190,18 @@ export default function ProfilePage() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.tripsRow}
       >
-        {TRIPS.map((trip) => (
-          <TripCard key={trip.id} title={trip.title} />
-        ))}
+        {trips.length > 0 ? (
+          trips
+            .slice(0, 5)
+            .map((trip) => <TripCard key={trip.id} title={trip.title} />)
+        ) : (
+          <Text style={styles.emptyTrips}>No trips yet.</Text>
+        )}
       </ScrollView>
+
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutText}>Log Out</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -129,11 +217,15 @@ const COLOURS = {
   progressBg: "#E4D8C8",
   tripBg: "#2D4A3E",
   border: "#E2D8CC",
+  danger: "#C0392B",
 };
 
 const styles = StyleSheet.create({
-  screen: {
+  screen: { flex: 1, backgroundColor: COLOURS.bg },
+  centered: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: COLOURS.bg,
   },
   scrollContent: {
@@ -147,9 +239,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     gap: 16,
   },
-  avatarWrapper: {
-    flexShrink: 0,
-  },
+  avatarWrapper: { flexShrink: 0 },
   avatarRing: {
     width: 82,
     height: 82,
@@ -161,16 +251,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarImage: {
+  avatarImage: { width: 72, height: 72, borderRadius: 36 },
+  avatarPlaceholder: {
     width: 72,
     height: 72,
     borderRadius: 36,
+    justifyContent: "center",
+    alignItems: "center",
   },
-
-  headerInfo: {
-    flex: 1,
-    paddingTop: 4,
-  },
+  avatarInitial: { fontSize: 28 },
+  headerInfo: { flex: 1, paddingTop: 4 },
   headerName: {
     fontSize: 18,
     fontWeight: "700",
@@ -186,12 +276,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     marginBottom: 4,
   },
-  headerAbout: {
-    fontSize: 13,
-    color: COLOURS.textSoft,
-    lineHeight: 19,
-  },
-
+  headerAbout: { fontSize: 13, color: COLOURS.textSoft, lineHeight: 19 },
   statsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -214,20 +299,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 1,
   },
-  statEmoji: {
-    fontSize: 14,
-    marginRight: 4,
-  },
-
-  statValue: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: COLOURS.text,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: COLOURS.textMuted,
-  },
+  statEmoji: { fontSize: 14, marginRight: 4 },
+  statValue: { fontSize: 15, fontWeight: "700", color: COLOURS.text },
+  statLabel: { fontSize: 11, color: COLOURS.textMuted },
   coverageCard: {
     backgroundColor: COLOURS.card,
     borderRadius: 16,
@@ -248,11 +322,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   coverageEmoji: { fontSize: 18 },
-  coverageTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: COLOURS.text,
-  },
+  coverageTitle: { fontSize: 15, fontWeight: "700", color: COLOURS.text },
   miniMapPlaceholder: {
     height: 64,
     backgroundColor: COLOURS.accentLight,
@@ -263,11 +333,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLOURS.border,
   },
-  miniMap: {
-    fontSize: 12,
-    color: COLOURS.textMuted,
-    fontStyle: "italic",
-  },
+  miniMap: { fontSize: 12, color: COLOURS.textMuted, fontStyle: "italic" },
   coveragePercent: {
     fontSize: 12,
     color: COLOURS.textSoft,
@@ -285,18 +351,13 @@ const styles = StyleSheet.create({
     backgroundColor: COLOURS.accent,
     borderRadius: 4,
   },
-
   sectionTitle: {
     fontSize: 17,
     fontWeight: "700",
     color: COLOURS.text,
     marginBottom: 12,
   },
-  tripsRow: {
-    gap: 12,
-    paddingRight: 4,
-    marginBottom: 24,
-  },
+  tripsRow: { gap: 12, paddingRight: 4, marginBottom: 24 },
   tripCard: {
     width: 122,
     height: 120,
@@ -310,10 +371,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  tripImageEmoji: {
-    fontSize: 48,
-    opacity: 0.85,
-  },
+  tripImageEmoji: { fontSize: 48, opacity: 0.85 },
   tripLabelBanner: {
     backgroundColor: "rgba(0,0,0,0.55)",
     paddingVertical: 5,
@@ -326,14 +384,34 @@ const styles = StyleSheet.create({
     textAlign: "center",
     letterSpacing: 0.3,
   },
-  memoriesGrid: {
-    flexDirection: "row",
-    gap: 10,
+  emptyTrips: {
+    fontSize: 13,
+    color: COLOURS.textMuted,
+    fontStyle: "italic",
+    alignSelf: "center",
+    marginTop: 10,
   },
-  memoryCard: {
-    flex: 1,
-    height: 90,
-    backgroundColor: COLOURS.border,
+  logoutButton: {
+    marginTop: 8,
+    paddingVertical: 14,
     borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: COLOURS.danger,
+    alignItems: "center",
   },
+  shareButton: {
+    backgroundColor: COLOURS.accentLight,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: COLOURS.accent,
+  },
+  shareButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLOURS.accent,
+  },
+  logoutText: { fontSize: 14, fontWeight: "600", color: COLOURS.danger },
 });

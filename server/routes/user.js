@@ -7,6 +7,7 @@ const userRouter = Router();
 // Public routes for registration and login
 userRouter.post("/register", usercontroller.register);
 userRouter.post("/login", usercontroller.login);
+userRouter.get("/public/:token", usercontroller.getPublicProfile);
 
 // Protected route for profile
 userRouter.get("/profile", authenticateToken, usercontroller.getProfile);
@@ -31,5 +32,8 @@ userRouter.get(
   authenticateToken,
   usercontroller.getProfileStat,
 );
+userRouter.patch("/profile/update", authenticateToken, usercontroller.updateUser);
+userRouter.delete("/profile/delete", authenticateToken, usercontroller.deleteUser);
+userRouter.get("/profile/share-token", authenticateToken, usercontroller.getMyPublicToken);
 
 module.exports = userRouter;
