@@ -6,14 +6,20 @@ import {
   StyleSheet,
   Pressable,
   ActivityIndicator,
+  useWindowDimensions,
+  Image,
 } from "react-native";
 import { router } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import FormInput from "../components/FormInput";
 import PrimaryButton from "../components/PrimaryButton";
 import COLOURS from "../constants/colours";
 import { updateProfile, getProfile } from "../services/userService";
 
 export default function EditProfileScreen() {
+  const { width, height } = useWindowDimensions();
+  const isSmallScreen = width < 380 || height < 760;
+
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -34,6 +40,7 @@ export default function EditProfileScreen() {
   const [serverError, setServerError] = useState("");
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
+  const [profilePhoto, setProfilePhoto] = useState(null);
 
   useEffect(() => {
     async function loadProfile() {
@@ -41,9 +48,9 @@ export default function EditProfileScreen() {
         const data = await getProfile();
 
         const profileData = {
-          username: data.user?.username || "",
-          email: data.user?.email || "",
-          home_country: data.user?.home_country || "",
+          username: data.username || "",
+          email: data.email || "",
+          home_country: data.home_country || "",
         };
 
         setForm((prev) => ({
@@ -139,8 +146,7 @@ export default function EditProfileScreen() {
 
     try {
       setLoading(true);
-
-      const data = await updateProfile(payload);
+      await updateProfile(payload);
 
       setSuccessMessage("Profile updated successfully.");
 
@@ -161,8 +167,8 @@ export default function EditProfileScreen() {
       }));
 
       setTimeout(() => {
-        router.back();
-      }, 800);
+        router.replace("/profile");
+      }, 700);
     } catch (error) {
       setServerError(error.message);
     } finally {
@@ -171,7 +177,35 @@ export default function EditProfileScreen() {
   }
 
   function handleCancel() {
-    router.back();
+    router.replace("/profile");
+  }
+
+  async function handleChangePhoto() {
+    try {
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permissionResult.granted) {
+        setServerError("Permission to access photos was denied.");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (result.canceled) return;
+
+      const selectedAsset = result.assets?.[0];
+      if (selectedAsset?.uri) {
+        setProfilePhoto(selectedAsset.uri);
+      }
+    } catch (error) {
+      setServerError("Failed to select image.");
+    }
   }
 
   if (initialLoading) {
@@ -185,111 +219,190 @@ export default function EditProfileScreen() {
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={[
+        styles.scrollContent,
+        {
+          paddingHorizontal: isSmallScreen ? 12 : 16,
+          paddingTop: isSmallScreen ? 12 : 18,
+          paddingBottom: isSmallScreen ? 16 : 20,
+        },
+      ]}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.heroCard}>
-        <Text style={styles.heroEyebrow}>Profile</Text>
-        <Text style={styles.heroTitle}>Edit your details</Text>
-        <Text style={styles.heroSubtitle}>
-          Update your profile information and password.
-        </Text>
-      </View>
+      <View style={styles.shell}>
+        <View style={styles.heroCard}>
+          <Pressable style={styles.simpleBackRow} onPress={handleCancel}>
+            <Text style={styles.simpleBackText}>← Back</Text>
+          </Pressable>
 
-      <View style={styles.formCard}>
-        <View style={styles.avatarSection}>
-          <View style={styles.avatarRing}>
-            <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarEmoji}>📷</Text>
+          <Text style={styles.heroEyebrow}>Profile Studio</Text>
+          <Text
+            style={[
+              styles.heroTitle,
+              {
+                fontSize: isSmallScreen ? 21 : 24,
+                lineHeight: isSmallScreen ? 27 : 30,
+              },
+            ]}
+          >
+            Edit your details
+          </Text>
+          <Text style={styles.heroSubtitle}>
+            Update your essentials and keep your profile current.
+          </Text>
+        </View>
+
+        <View style={styles.mainCard}>
+          <View style={styles.avatarSectionCompact}>
+            <View style={styles.avatarRowCompact}>
+              <View style={styles.avatarRingCompact}>
+                {profilePhoto ? (
+                  <Image
+                    source={{ uri: profilePhoto }}
+                    style={styles.avatarImageCompact}
+                  />
+                ) : (
+                  <View style={styles.avatarPlaceholderCompact}>
+                    <Text style={styles.avatarEmojiCompact}>👤</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.avatarInfoCompact}>
+                <Text style={styles.avatarTitleCompact}>Profile Photo</Text>
+                <Text style={styles.avatarSubtitleCompact}>
+                  Keep it simple and recognisable
+                </Text>
+              </View>
+
+              <Pressable
+                style={styles.photoIconButton}
+                onPress={handleChangePhoto}
+              >
+                <Text style={styles.photoIcon}>📷</Text>
+              </Pressable>
             </View>
           </View>
 
-          <Pressable style={styles.photoButton}>
-            <Text style={styles.photoButtonText}>Change Photo</Text>
-          </Pressable>
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionEyebrow}>Essentials</Text>
+              <Text style={styles.sectionTitle}>Personal details</Text>
+            </View>
+
+            <View style={styles.compactGrid}>
+              <View style={styles.gridItem}>
+                <FormInput
+                  label="Username"
+                  value={form.username}
+                  onChangeText={(text) =>
+                    setForm((prev) => ({ ...prev, username: text }))
+                  }
+                  placeholder="maya_reyes"
+                  error={errors.username}
+                />
+              </View>
+
+              <View style={styles.gridItem}>
+                <FormInput
+                  label="Home Country"
+                  value={form.home_country}
+                  onChangeText={(text) =>
+                    setForm((prev) => ({ ...prev, home_country: text }))
+                  }
+                  placeholder="Spain"
+                  autoCapitalize="words"
+                  error={errors.home_country}
+                />
+              </View>
+            </View>
+
+            <FormInput
+              label="Email"
+              value={form.email}
+              onChangeText={(text) =>
+                setForm((prev) => ({ ...prev, email: text }))
+              }
+              placeholder="maya@example.com"
+              keyboardType="email-address"
+              error={errors.email}
+            />
+          </View>
+
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionEyebrow}>Security</Text>
+              <Text style={styles.sectionTitle}>Password update</Text>
+              <Text style={styles.sectionHint}>
+                Leave blank if you do not want to change your password.
+              </Text>
+            </View>
+
+            <View style={styles.compactGrid}>
+              <View style={styles.gridItem}>
+                <FormInput
+                  label="Current Password"
+                  value={form.currentPassword}
+                  onChangeText={(text) =>
+                    setForm((prev) => ({ ...prev, currentPassword: text }))
+                  }
+                  placeholder="Current password"
+                  secureTextEntry
+                  error={errors.currentPassword}
+                />
+              </View>
+
+              <View style={styles.gridItem}>
+                <FormInput
+                  label="New Password"
+                  value={form.newPassword}
+                  onChangeText={(text) =>
+                    setForm((prev) => ({ ...prev, newPassword: text }))
+                  }
+                  placeholder="New password"
+                  secureTextEntry
+                  error={errors.newPassword}
+                />
+              </View>
+            </View>
+
+            <FormInput
+              label="Confirm Password"
+              value={form.confirmPassword}
+              onChangeText={(text) =>
+                setForm((prev) => ({ ...prev, confirmPassword: text }))
+              }
+              placeholder="Confirm password"
+              secureTextEntry
+              error={errors.confirmPassword}
+            />
+          </View>
+
+          {serverError ? (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>{serverError}</Text>
+            </View>
+          ) : null}
+
+          {successMessage ? (
+            <View style={styles.successBox}>
+              <Text style={styles.successText}>{successMessage}</Text>
+            </View>
+          ) : null}
+
+          <View style={styles.bottomActions}>
+            <View style={styles.primaryActionWrap}>
+              <PrimaryButton
+                label={loading ? "Saving..." : "Save Changes"}
+                onPress={handleSave}
+              />
+            </View>
+
+            <Pressable style={styles.cancelButton} onPress={handleCancel}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </Pressable>
+          </View>
         </View>
-
-        <FormInput
-          label="Username"
-          value={form.username}
-          onChangeText={(text) =>
-            setForm((prev) => ({ ...prev, username: text }))
-          }
-          placeholder="maya_reyes"
-          error={errors.username}
-        />
-
-        <FormInput
-          label="Email"
-          value={form.email}
-          onChangeText={(text) => setForm((prev) => ({ ...prev, email: text }))}
-          placeholder="maya@example.com"
-          keyboardType="email-address"
-          error={errors.email}
-        />
-
-        <FormInput
-          label="Home Country"
-          value={form.home_country}
-          onChangeText={(text) =>
-            setForm((prev) => ({ ...prev, home_country: text }))
-          }
-          placeholder="Spain"
-          autoCapitalize="words"
-          error={errors.home_country}
-        />
-
-        <Text style={styles.sectionTitle}>Change Password</Text>
-
-        <FormInput
-          label="Current Password"
-          value={form.currentPassword}
-          onChangeText={(text) =>
-            setForm((prev) => ({ ...prev, currentPassword: text }))
-          }
-          placeholder="Enter current password"
-          secureTextEntry
-          error={errors.currentPassword}
-        />
-
-        <FormInput
-          label="New Password"
-          value={form.newPassword}
-          onChangeText={(text) =>
-            setForm((prev) => ({ ...prev, newPassword: text }))
-          }
-          placeholder="Enter new password"
-          secureTextEntry
-          error={errors.newPassword}
-        />
-
-        <FormInput
-          label="Confirm New Password"
-          value={form.confirmPassword}
-          onChangeText={(text) =>
-            setForm((prev) => ({ ...prev, confirmPassword: text }))
-          }
-          placeholder="Confirm new password"
-          secureTextEntry
-          error={errors.confirmPassword}
-        />
-
-        {serverError ? (
-          <Text style={styles.serverError}>{serverError}</Text>
-        ) : null}
-
-        {successMessage ? (
-          <Text style={styles.successMessage}>{successMessage}</Text>
-        ) : null}
-
-        <PrimaryButton
-          label={loading ? "Saving..." : "Save Changes"}
-          onPress={handleSave}
-        />
-
-        <Pressable style={styles.cancelButton} onPress={handleCancel}>
-          <Text style={styles.cancelButtonText}>Cancel</Text>
-        </Pressable>
       </View>
     </ScrollView>
   );
@@ -307,117 +420,216 @@ const styles = StyleSheet.create({
     backgroundColor: COLOURS.bg,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 56,
-    paddingBottom: 40,
+    minHeight: "100%",
+  },
+  shell: {
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
   },
   heroCard: {
+    marginTop: 22,
     backgroundColor: COLOURS.card,
-    borderRadius: 18,
-    padding: 20,
+    borderRadius: 22,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: COLOURS.border,
-    marginBottom: 16,
+    marginBottom: 10,
     shadowColor: "#000",
     shadowOpacity: 0.05,
-    shadowRadius: 6,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 3 },
     elevation: 2,
   },
-  heroEyebrow: {
-    fontSize: 11,
+  simpleBackRow: {
+    alignSelf: "flex-start",
+    marginBottom: 10,
+  },
+  simpleBackText: {
+    fontSize: 13,
     fontWeight: "700",
     color: COLOURS.accent,
-    textTransform: "uppercase",
+  },
+  heroEyebrow: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: COLOURS.accent,
     letterSpacing: 1,
-    marginBottom: 8,
+    textTransform: "uppercase",
+    marginBottom: 6,
   },
   heroTitle: {
-    fontSize: 24,
-    fontWeight: "700",
+    fontWeight: "800",
     color: COLOURS.text,
     marginBottom: 6,
   },
   heroSubtitle: {
-    fontSize: 14,
+    fontSize: 12,
+    lineHeight: 18,
     color: COLOURS.textSoft,
-    lineHeight: 20,
   },
-  formCard: {
+  mainCard: {
     backgroundColor: COLOURS.card,
-    borderRadius: 18,
-    padding: 16,
+    borderRadius: 22,
+    padding: 12,
     borderWidth: 1,
     borderColor: COLOURS.border,
     shadowColor: "#000",
     shadowOpacity: 0.04,
-    shadowRadius: 4,
+    shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    elevation: 2,
   },
-  avatarSection: {
+  avatarSectionCompact: {
+    marginBottom: 8,
+  },
+  avatarRowCompact: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    justifyContent: "space-between",
+    backgroundColor: "#FFF9F3",
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: "#F0E2D1",
   },
-  avatarRing: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
-    borderWidth: 2.5,
+  avatarRingCompact: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 2,
     borderColor: COLOURS.accent,
-    padding: 4,
     backgroundColor: COLOURS.accentLight,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 12,
+    padding: 3,
   },
-  avatarPlaceholder: {
-    width: 78,
-    height: 78,
-    borderRadius: 39,
+  avatarPlaceholderCompact: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: COLOURS.card,
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarEmoji: {
-    fontSize: 28,
+  avatarImageCompact: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
   },
-  photoButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 999,
-    backgroundColor: COLOURS.accentLight,
+  avatarEmojiCompact: {
+    fontSize: 20,
   },
-  photoButtonText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: COLOURS.accent,
+  avatarInfoCompact: {
+    flex: 1,
+    marginLeft: 10,
+    marginRight: 10,
   },
-  sectionTitle: {
-    marginTop: 8,
-    marginBottom: 12,
-    fontSize: 16,
+  avatarTitleCompact: {
+    fontSize: 14,
     fontWeight: "700",
     color: COLOURS.text,
+    marginBottom: 2,
   },
-  serverError: {
-    marginBottom: 12,
-    fontSize: 12,
-    color: COLOURS.danger || "#C0392B",
+  avatarSubtitleCompact: {
+    fontSize: 11,
+    color: COLOURS.textSoft,
   },
-  successMessage: {
-    marginBottom: 12,
-    fontSize: 12,
+  photoIconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#FFF4E7",
+    borderWidth: 1,
+    borderColor: COLOURS.accentLight,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  photoIcon: {
+    fontSize: 16,
+  },
+  sectionCard: {
+    backgroundColor: "#FFF9F3",
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: "#F0E2D1",
+    marginBottom: 8,
+  },
+  sectionHeader: {
+    marginBottom: 4,
+  },
+  sectionEyebrow: {
+    fontSize: 9,
+    fontWeight: "800",
     color: COLOURS.accent,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLOURS.text,
+    marginBottom: 2,
+  },
+  sectionHint: {
+    fontSize: 10,
+    lineHeight: 15,
+    color: COLOURS.textSoft,
+  },
+  compactGrid: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  gridItem: {
+    flex: 1,
+    minWidth: 140,
+  },
+  errorBox: {
+    backgroundColor: "#FDECEC",
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginTop: 2,
+    marginBottom: 6,
+  },
+  errorText: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: COLOURS.danger,
+  },
+  successBox: {
+    backgroundColor: "#FFF4E7",
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginTop: 2,
+    marginBottom: 6,
+  },
+  successText: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: COLOURS.accent,
+    fontWeight: "600",
+  },
+  bottomActions: {
+    marginTop: 2,
+  },
+  primaryActionWrap: {
+    marginBottom: 4,
   },
   cancelButton: {
-    marginTop: 12,
     alignItems: "center",
-    paddingVertical: 12,
+    paddingVertical: 8,
   },
   cancelButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 12,
+    fontWeight: "700",
     color: COLOURS.textSoft,
   },
 });

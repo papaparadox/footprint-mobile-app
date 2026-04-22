@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { Link } from "expo-router";
@@ -6,10 +6,19 @@ import FormInput from "../components/FormInput";
 import PrimaryButton from "../components/PrimaryButton";
 import COLOURS from "../constants/colours";
 import User from "../models/User";
-import { registerUser } from "../services/authService";
+import { registerUser, loginUser } from "../services/authService";
+import { useAuth } from "../context/AuthContext"
 
 export default function RegisterScreen() {
+  const { signIn, isAuthenticated } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/countries");
+    }
+  }, [isAuthenticated]);
+
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -71,14 +80,17 @@ export default function RegisterScreen() {
 
     try {
       setLoading(true);
+      await registerUser(newUser);
+      // const data = await registerUser(newUser);
 
-      const data = await registerUser(newUser);
+      const loginData = await loginUser(form.email.trim(), form.password);
+      await signIn(loginData.token);
 
-      setSuccessMessage("Account created successfully.");
-      console.log("Register response:", data);
-      setTimeout(() => {
-        router.replace("/login");
-      }, 1000);
+      // setSuccessMessage("Account created successfully.");
+      // console.log("Register response:", data);
+      // setTimeout(() => {
+      //   router.replace("/login");
+      // }, 1000);
     } catch (error) {
       setServerError(error.message);
     } finally {
@@ -177,6 +189,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   heroCard: {
+    marginTop: 22,
     backgroundColor: COLOURS.card,
     borderRadius: 18,
     padding: 20,

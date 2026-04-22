@@ -7,58 +7,60 @@ export default function FormInput({
   value,
   onChangeText,
   placeholder,
-  secureTextEntry = false,
   error,
+  secureTextEntry,
+  keyboardType,
   autoCapitalize = "none",
-  keyboardType = "default",
 }) {
   return (
-    <View style={styles.inputGroup}>
-      <Text style={styles.inputLabel}>{label}</Text>
+    <View style={styles.container}>
+      {label && <Text style={styles.label}>{label}</Text>}
+
       <TextInput
+        style={[styles.input, error && styles.inputError]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={COLOURS.textMuted}
         secureTextEntry={secureTextEntry}
-        autoCapitalize={autoCapitalize}
         keyboardType={keyboardType}
-        style={[styles.input, error && styles.inputError]}
+        autoCapitalize={autoCapitalize}
       />
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+      {error && <Text style={styles.error}>{error}</Text>}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  inputGroup: {
-    marginBottom: 14,
+  container: {
+    marginBottom: 8,
   },
-  inputLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: COLOURS.accent,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: 6,
+
+  label: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: COLOURS.textSoft,
+    marginBottom: 4,
   },
+
   input: {
-    height: 48,
-    backgroundColor: COLOURS.bg,
-    borderRadius: 12,
+    height: 38,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    fontSize: 13,
+    backgroundColor: COLOURS.card,
     borderWidth: 1,
     borderColor: COLOURS.border,
-    paddingHorizontal: 14,
-    fontSize: 14,
-    color: COLOURS.text,
   },
+
   inputError: {
     borderColor: COLOURS.danger,
-    backgroundColor: COLOURS.dangerBg,
   },
-  errorText: {
-    marginTop: 6,
-    fontSize: 12,
+
+  error: {
+    marginTop: 2,
+    fontSize: 10,
     color: COLOURS.danger,
   },
 });
