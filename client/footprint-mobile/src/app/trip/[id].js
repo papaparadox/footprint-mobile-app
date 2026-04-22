@@ -112,7 +112,7 @@ export default function TripDetailPage() {
     }
   }
 
-  const heroImage = trip.images?.[0]?.image_url ?? null;
+  const DEMO_HERO = "https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?w=800&q=80";
   const days = daysBetween(trip.start_date, trip.end_date);
   const primaryVisit = trip.visits?.[0];
 
@@ -124,11 +124,7 @@ export default function TripDetailPage() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.heroWrapper}>
-          {heroImage ? (
-            <Image source={{ uri: heroImage }} style={styles.heroImage} />
-          ) : (
-            <View style={[styles.heroImage, styles.heroPlaceholder]} />
-          )}
+          <Image source={{ uri: DEMO_HERO }} style={styles.heroImage} />
           <TouchableOpacity
             style={styles.closeBtn}
             onPress={() => router.push("/trips")}
@@ -151,12 +147,8 @@ export default function TripDetailPage() {
             <Text style={styles.statValue}>{days}</Text>
           </View>
           <View style={styles.statBox}>
-            <Text style={styles.statLabel}>Temperature</Text>
-            <Text style={styles.statValue}>—</Text>
-          </View>
-          <View style={styles.statBox}>
             <Text style={styles.statLabel}>Rating</Text>
-            <Text style={styles.statValue}>{trip.mood ?? "—"}</Text>
+            <Text style={styles.statValue}>{trip.mood ?? "5"}/5</Text>
           </View>
         </View>
 
@@ -212,7 +204,6 @@ export default function TripDetailPage() {
           </>
         )}
 
-        <Text style={styles.ratingsText}>Ratings {trip.mood ?? "—"}/5</Text>
       </ScrollView>
 
       <Modal
@@ -378,14 +369,6 @@ const styles = StyleSheet.create({
     height: 110,
     borderRadius: 12,
     backgroundColor: COLOURS.border,
-  },
-
-  ratingsText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: COLOURS.text,
-    marginHorizontal: 16,
-    marginBottom: 8,
   },
 
   modalOverlay: {
