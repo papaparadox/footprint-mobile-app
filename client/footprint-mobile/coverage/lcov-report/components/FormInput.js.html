@@ -23,30 +23,54 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
+<<<<<<< HEAD
+                <span class="strong">50% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>1/2</span>
+=======
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>2/2</span>
+>>>>>>> b97568a2695faee7afe67a9ff63c889bfeac2483
             </div>
         
             
             <div class='fl pad1y space-right2'>
+<<<<<<< HEAD
+                <span class="strong">0% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/7</span>
+=======
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>7/7</span>
+>>>>>>> b97568a2695faee7afe67a9ff63c889bfeac2483
             </div>
         
             
             <div class='fl pad1y space-right2'>
+<<<<<<< HEAD
+                <span class="strong">0% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/1</span>
+=======
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
                 <span class='fraction'>1/1</span>
+>>>>>>> b97568a2695faee7afe67a9ff63c889bfeac2483
             </div>
         
             
             <div class='fl pad1y space-right2'>
+<<<<<<< HEAD
+                <span class="strong">50% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>1/2</span>
+=======
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>2/2</span>
+>>>>>>> b97568a2695faee7afe67a9ff63c889bfeac2483
             </div>
         
             
@@ -61,7 +85,11 @@
             </div>
         </template>
     </div>
+<<<<<<< HEAD
+    <div class='status-line medium'></div>
+=======
     <div class='status-line high'></div>
+>>>>>>> b97568a2695faee7afe67a9ff63c889bfeac2483
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -127,9 +155,13 @@
 <a name='L62'></a><a href='#L62'>62</a>
 <a name='L63'></a><a href='#L63'>63</a>
 <a name='L64'></a><a href='#L64'>64</a>
+<<<<<<< HEAD
+<a name='L65'></a><a href='#L65'>65</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+=======
 <a name='L65'></a><a href='#L65'>65</a>
 <a name='L66'></a><a href='#L66'>66</a>
 <a name='L67'></a><a href='#L67'>67</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+>>>>>>> b97568a2695faee7afe67a9ff63c889bfeac2483
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -143,7 +175,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<<<<<<< HEAD
+<span class="cline-any cline-no">&nbsp;</span>
+=======
 <span class="cline-any cline-yes">535x</span>
+>>>>>>> b97568a2695faee7afe67a9ff63c889bfeac2483
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -161,9 +197,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<<<<<<< HEAD
+<span class="cline-any cline-yes">3x</span>
+=======
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
+>>>>>>> b97568a2695faee7afe67a9ff63c889bfeac2483
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -199,11 +239,26 @@
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import COLOURS from "../constants/colours";
 &nbsp;
+<<<<<<< HEAD
+export default function <span class="fstat-no" title="function not covered" >FormInput(</span>{
+=======
 export default function FormInput({
+>>>>>>> b97568a2695faee7afe67a9ff63c889bfeac2483
   label,
   value,
   onChangeText,
   placeholder,
+<<<<<<< HEAD
+  secureTextEntry = <span class="branch-0 cbranch-no" title="branch not covered" >false,</span>
+  error,
+  autoCapitalize = <span class="branch-0 cbranch-no" title="branch not covered" >"none",</span>
+  keyboardType = <span class="branch-0 cbranch-no" title="branch not covered" >"default",</span>
+}) {
+<span class="cstat-no" title="statement not covered" >  return (</span>
+    &lt;View style={styles.inputGroup}&gt;
+      &lt;Text style={styles.inputLabel}&gt;{label}&lt;/Text&gt;
+      &lt;TextInput
+=======
   error,
   secureTextEntry,
   keyboardType,
@@ -215,21 +270,60 @@ export default function FormInput({
 &nbsp;
       &lt;TextInput
         style={[styles.input, error &amp;&amp; styles.inputError]}
+>>>>>>> b97568a2695faee7afe67a9ff63c889bfeac2483
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={COLOURS.textMuted}
         secureTextEntry={secureTextEntry}
+<<<<<<< HEAD
+        autoCapitalize={autoCapitalize}
+        keyboardType={keyboardType}
+        style={[styles.input, error &amp;&amp; styles.inputError]}
+      /&gt;
+      {error ? &lt;Text style={styles.errorText}&gt;{error}&lt;/Text&gt; : null}
+=======
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
       /&gt;
 &nbsp;
       {error &amp;&amp; &lt;Text style={styles.error}&gt;{error}&lt;/Text&gt;}
+>>>>>>> b97568a2695faee7afe67a9ff63c889bfeac2483
     &lt;/View&gt;
   );
 }
 &nbsp;
 const styles = StyleSheet.create({
+<<<<<<< HEAD
+  inputGroup: {
+    marginBottom: 14,
+  },
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: COLOURS.accent,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    marginBottom: 6,
+  },
+  input: {
+    height: 48,
+    backgroundColor: COLOURS.bg,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLOURS.border,
+    paddingHorizontal: 14,
+    fontSize: 14,
+    color: COLOURS.text,
+  },
+  inputError: {
+    borderColor: COLOURS.danger,
+    backgroundColor: COLOURS.dangerBg,
+  },
+  errorText: {
+    marginTop: 6,
+    fontSize: 12,
+=======
   container: {
     marginBottom: 8,
   },
@@ -258,6 +352,7 @@ const styles = StyleSheet.create({
   error: {
     marginTop: 2,
     fontSize: 10,
+>>>>>>> b97568a2695faee7afe67a9ff63c889bfeac2483
     color: COLOURS.danger,
   },
 });
@@ -268,7 +363,11 @@ const styles = StyleSheet.create({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+<<<<<<< HEAD
+                at 2026-04-22T14:45:41.467Z
+=======
                 at 2026-04-22T13:48:03.547Z
+>>>>>>> b97568a2695faee7afe67a9ff63c889bfeac2483
             </div>
         <script src="../prettify.js"></script>
         <script>

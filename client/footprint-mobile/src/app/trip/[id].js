@@ -15,67 +15,20 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
+import { getTripById, updateTrip, addTripImage } from "../../services/tripService";
 
-const DUMMY_TRIPS = {
-  1: {
-    id: 1,
-    user_id: 1,
-    title: "Trip 1",
-    start_date: "2025-03-01",
-    end_date: "2025-03-14",
-    notes:
-      "Incredible food, neon lights, and cherry blossoms everywhere. What a blast!",
-    share_token: null,
-    mood: "5",
-    images: [],
-    visits: [
-      {
-        id: 1,
-        user_id: 1,
-        country_id: 109,
-        city_id: 1,
-        landmark_id: null,
-        trip_id: 1,
-        date_visited: "2025-03-01",
-        notes: null,
-        created_at: "2025-03-15T10:00:00Z",
-        country_name: "Japan",
-        continent: "Asia",
-        city_name: "Tokyo",
-      },
-    ],
-  },
-  2: {
-    id: 2,
-    user_id: 1,
-    title: "Trip 2",
-    start_date: "2024-08-01",
-    end_date: "2024-08-07",
-    notes: "Pastel de nata every single morning. I am getting sick",
-    share_token: null,
-    mood: "4",
-    images: [],
-    visits: [
-      {
-        id: 2,
-        user_id: 1,
-        country_id: 173,
-        city_id: 2,
-        landmark_id: null,
-        trip_id: 2,
-        date_visited: "2024-08-01",
-        notes: null,
-        created_at: "2024-08-07T09:00:00Z",
-        country_name: "Portugal",
-        continent: "Europe",
-        city_name: "Lisbon",
-      },
-    ],
-  },
+const COLOURS = {
+  bg: "#F5F0E8",
+  card: "#FFFFFF",
+  accent: "#C47B2B",
+  text: "#1C1C1E",
+  textSoft: "#6B6055",
+  textMuted: "#A89B8C",
+  border: "#E2D8CC",
 };
 
 function daysBetween(start, end) {
-  if (!start || !end) return "No data";
+  if (!start || !end) return "—";
   return Math.round((new Date(end) - new Date(start)) / 86400000);
 }
 
@@ -83,16 +36,31 @@ export default function TripDetailPage() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
-  const [trip, setTrip] = useState(DUMMY_TRIPS[id] ?? null);
+  const [trip, setTrip] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [notesVisible, setNotesVisible] = useState(false);
-  const [draftNotes, setDraftNotes] = useState(trip?.notes ?? "");
+  const [draftNotes, setDraftNotes] = useState("");
+  const [savingNotes, setSavingNotes] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useEffect(() => {
-    const tripData = DUMMY_TRIPS[id] ?? null;
-    setTrip(tripData);
-    setDraftNotes(tripData?.notes ?? "");
+    setLoading(true);
+    getTripById(id)
+      .then((data) => {
+        setTrip(data);
+        setDraftNotes(data.notes ?? "");
+      })
+      .catch(() => setTrip(null))
+      .finally(() => setLoading(false));
   }, [id]);
+
+  if (loading) {
+    return (
+      <View style={styles.centred}>
+        <ActivityIndicator size="large" color={COLOURS.accent} />
+      </View>
+    );
+  }
 
   if (!trip) {
     return (
@@ -102,44 +70,46 @@ export default function TripDetailPage() {
     );
   }
 
-  function handleSaveNotes() {
-    setTrip((prev) => ({ ...prev, notes: draftNotes }));
-    setNotesVisible(false);
+  async function handleSaveNotes() {
+    setSavingNotes(true);
+    try {
+      const updated = await updateTrip(trip.id, { notes: draftNotes });
+      setTrip((prev) => ({ ...prev, notes: updated.notes ?? draftNotes }));
+      setNotesVisible(false);
+    } catch {
+      setTrip((prev) => ({ ...prev, notes: draftNotes }));
+      setNotesVisible(false);
+    } finally {
+      setSavingNotes(false);
+    }
   }
 
   async function handleAddPhoto() {
     const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!granted) {
-      Alert.alert(
-        "Permission needed",
-        "Allow photo library access to upload images.",
-      );
+      Alert.alert("Permission needed", "Allow photo library access to upload images.");
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
+      quality: 0.8,
     });
 
     if (result.canceled || !result.assets?.[0]) return;
 
     setUploadingPhoto(true);
-    setTimeout(() => {
+    try {
+      const saved = await addTripImage(trip.id, result.assets[0]);
       setTrip((prev) => ({
         ...prev,
-        images: [
-          ...prev.images,
-          {
-            id: Date.now(),
-            trip_id: prev.id,
-            image_url: result.assets[0].uri,
-            caption: null,
-            uploaded_at: new Date().toISOString(),
-          },
-        ],
+        images: [...prev.images, saved],
       }));
+    } catch {
+      Alert.alert("Upload failed", "Could not upload the photo. Please try again.");
+    } finally {
       setUploadingPhoto(false);
-    }, 600);
+    }
   }
 
   const heroImage = trip.images?.[0]?.image_url ?? null;
@@ -276,10 +246,15 @@ export default function TripDetailPage() {
                 <Text style={styles.modalCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.modalSaveBtn}
+                style={[styles.modalSaveBtn, savingNotes && { opacity: 0.6 }]}
                 onPress={handleSaveNotes}
+                disabled={savingNotes}
               >
-                <Text style={styles.modalSaveText}>Save</Text>
+                {savingNotes ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.modalSaveText}>Save</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -288,16 +263,6 @@ export default function TripDetailPage() {
     </>
   );
 }
-
-const COLOURS = {
-  bg: "#F5F0E8",
-  card: "#FFFFFF",
-  accent: "#C47B2B",
-  text: "#1C1C1E",
-  textSoft: "#6B6055",
-  textMuted: "#A89B8C",
-  border: "#E2D8CC",
-};
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: COLOURS.bg },
