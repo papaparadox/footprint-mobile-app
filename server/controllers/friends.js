@@ -2,6 +2,7 @@ const Friendship = require("../models/Friendship");
 const User = require("../models/User");
 const db = require("../database/connect");
 const UserStats = require("../models/UserStats");
+const { getTravelSuggestionFromLLM } = require("../services/llmTravelService");
 
 async function searchUsers(req, res) {
   try {
@@ -323,6 +324,77 @@ async function getFriendProfile(req, res) {
     res.status(500).json({ err: err.message });
   }
 }
+async function travelChatWithFriend(req, res) {
+  try {
+    const userId = req.user.id;
+    const friendId = parseInt(req.params.friendId, 10);
+    const { duration = "3-5-days", message = "" } = req.body;
+
+    const isFriend = await Friendship.areFriends(userId, friendId);
+
+    if (!isFriend) {
+      return res.status(403).json({ err: "You can only compare with friends" });
+    }
+
+    const myStatsRaw = await UserStats.getStats(userId);
+    const friendStatsRaw = await UserStats.getStats(friendId);
+
+    const myCountriesResult = await db.query(
+      `
+      SELECT DISTINCT c.name
+      FROM visited_locations vl
+      JOIN countries c ON vl.country_id = c.id
+      WHERE vl.user_id = $1
+      ORDER BY c.name ASC
+      `,
+      [userId],
+    );
+
+    const friendCountriesResult = await db.query(
+      `
+      SELECT DISTINCT c.name
+      FROM visited_locations vl
+      JOIN countries c ON vl.country_id = c.id
+      WHERE vl.user_id = $1
+      ORDER BY c.name ASC
+      `,
+      [friendId],
+    );
+
+    const myCountries = myCountriesResult.rows.map((row) => row.name);
+    const friendCountries = friendCountriesResult.rows.map((row) => row.name);
+
+    const myStats = {
+      countries_visited: Number(myStatsRaw?.countries_visited) || 0,
+      continents_visited: Number(myStatsRaw?.continents_visited) || 0,
+      cities_visited: Number(myStatsRaw?.cities_visited) || 0,
+      trips_taken: Number(myStatsRaw?.trips_taken) || 0,
+    };
+
+    const friendStats = {
+      countries_visited: Number(friendStatsRaw?.countries_visited) || 0,
+      continents_visited: Number(friendStatsRaw?.continents_visited) || 0,
+      cities_visited: Number(friendStatsRaw?.cities_visited) || 0,
+      trips_taken: Number(friendStatsRaw?.trips_taken) || 0,
+    };
+
+    const llmResult = await getTravelSuggestionFromLLM({
+      duration,
+      userMessage: message,
+      myStats,
+      friendStats,
+      myCountries,
+      friendCountries,
+    });
+
+    res.status(200).json({
+      success: true,
+      ...llmResult,
+    });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
+}
 
 module.exports = {
   searchUsers,
@@ -334,4 +406,5 @@ module.exports = {
   removeFriend,
   compareWithFriend,
   getFriendProfile,
+  travelChatWithFriend,
 };

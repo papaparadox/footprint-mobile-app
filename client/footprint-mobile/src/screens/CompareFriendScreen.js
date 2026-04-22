@@ -8,8 +8,12 @@ import {
   Pressable,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { compareWithFriend } from "../services/friendService";
+import {
+  compareWithFriend,
+  travelChatWithFriend,
+} from "../services/friendService";
 import GlobeView from "../components/GlobeView";
+import TravelAssistantChat from "../components/TravelAssistantChat";
 import COLOURS from "../constants/colours";
 
 function CompareStatCard({ title, countries, continents, coverage }) {
@@ -40,16 +44,9 @@ function CompareGlobeCard({ myCountries, friendCountries, onMessage }) {
     return commonCountries;
   }, [activeTab, myCountries, friendCountries, commonCountries]);
 
-  const subtitle = useMemo(() => {
-    if (activeTab === "mine") return "Your visited countries";
-    if (activeTab === "friend") return "Friend's visited countries";
-    return "Countries you both visited";
-  }, [activeTab]);
-
   return (
     <View style={styles.sectionCard}>
       <Text style={styles.sectionTitle}>Compare Globe</Text>
-      <Text style={styles.sectionSubtitle}>{subtitle}</Text>
 
       <View style={styles.tabRow}>
         <Pressable
@@ -115,15 +112,28 @@ function CompareGlobeCard({ myCountries, friendCountries, onMessage }) {
 
 export default function CompareFriendScreen() {
   const { friendId } = useLocalSearchParams();
+
   const [comparison, setComparison] = useState(null);
   const [loading, setLoading] = useState(true);
   const [serverError, setServerError] = useState("");
+  const [messages, setMessages] = useState([
+    {
+      id: "welcome-1",
+      sender: "ai",
+      text: "I can help you and your friend discover a destination that is new to both of you.",
+    },
+    {
+      id: "welcome-2",
+      sender: "ai",
+      text: "Choose how much time you have, and I’ll suggest a shared next trip.",
+    },
+  ]);
 
   useEffect(() => {
     async function loadComparison() {
       try {
-        const data = await compareWithFriend(friendId);
-        setComparison(data);
+        const data = await compareWithFriend(friendId, "3-5-days");
+        setComparison(data.comparison || data);
       } catch (error) {
         setServerError(error.message);
       } finally {
@@ -133,6 +143,71 @@ export default function CompareFriendScreen() {
 
     loadComparison();
   }, [friendId]);
+
+  async function handleSelectDuration(option) {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `user-${Date.now()}`,
+        sender: "user",
+        text: option.label,
+      },
+    ]);
+
+    try {
+      const data = await travelChatWithFriend(friendId, {
+        duration: option.key,
+        message: `Suggest a destination for ${option.label}`,
+      });
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `ai-${Date.now()}`,
+          sender: "ai",
+          text: data.reply,
+          suggestion: data.suggestion,
+        },
+      ]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `ai-error-${Date.now()}`,
+          sender: "ai",
+          text: error.message,
+        },
+      ]);
+    }
+  }
+
+  async function handleAnotherOption() {
+    try {
+      const data = await travelChatWithFriend(friendId, {
+        duration: "3-5-days",
+        message: "Give me another option",
+      });
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `ai-alt-${Date.now()}`,
+          sender: "ai",
+          text: data.reply,
+          suggestion: data.suggestion,
+        },
+      ]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `ai-alt-error-${Date.now()}`,
+          sender: "ai",
+          text: error.message,
+        },
+      ]);
+    }
+  }
 
   function handleGlobeMessage(event) {
     try {
@@ -182,7 +257,7 @@ export default function CompareFriendScreen() {
         <Text style={styles.eyebrow}>Comparison</Text>
         <Text style={styles.heroTitle}>Journey Matchup</Text>
         <Text style={styles.heroSubtitle}>
-          See where your travel stories overlap and differ.
+          Compare your travel stories and discover where to go together next.
         </Text>
       </View>
 
@@ -198,6 +273,12 @@ export default function CompareFriendScreen() {
         countries={comparison?.friend_stats?.countries_visited ?? 0}
         continents={comparison?.friend_stats?.continents_visited ?? 0}
         coverage={comparison?.friend_stats?.world_coverage_percent ?? 0}
+      />
+
+      <TravelAssistantChat
+        messages={messages}
+        onSelectDuration={handleSelectDuration}
+        onAnotherOption={handleAnotherOption}
       />
 
       <CompareGlobeCard
@@ -249,14 +330,11 @@ export default function CompareFriendScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: COLOURS.bg,
-  },
+  screen: { flex: 1, backgroundColor: COLOURS.bg },
   content: {
     paddingHorizontal: 20,
     paddingTop: 18,
-    paddingBottom: 120,
+    paddingBottom: 130,
   },
   centered: {
     flex: 1,
@@ -337,12 +415,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     color: COLOURS.text,
-    marginBottom: 4,
-  },
-  sectionSubtitle: {
-    fontSize: 12,
-    color: COLOURS.textSoft,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   tabRow: {
     flexDirection: "row",

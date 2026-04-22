@@ -100,3 +100,16 @@ export async function compareWithFriend(friendId) {
     throw new Error(extractError(error));
   }
 }
+export async function travelChatWithFriend(friendId, payload) {
+  try {
+    const response = await api.post(
+      `/friends/${friendId}/travel-chat`,
+      payload,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.err || "Failed to get travel suggestion.",
+    );
+  }
+}
