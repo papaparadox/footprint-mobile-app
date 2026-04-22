@@ -196,13 +196,6 @@ export default function ProfilePage() {
         </View>
       </View>
 
-      <Pressable
-        style={styles.shareButton}
-        onPress={() => router.push("/share")}
-      >
-        <Text style={styles.shareButtonText}>Share Profile</Text>
-      </Pressable>
-
       <View style={styles.statsRow}>
         <StatPill
           emoji="🌍"
@@ -216,6 +209,31 @@ export default function ProfilePage() {
         />
         <StatPill emoji="✈️" value={trips.length} label="Trips" />
       </View>
+
+      {recentVisit && (
+        <View style={styles.recentCard}>
+          <Text style={styles.recentLabel}>Most Recent Visit</Text>
+          <View style={styles.recentRow}>
+            <Image
+              source={{ uri: recentVisit.flag_url
+                .replace("https://flagcdn.com/", "https://flagcdn.com/w80/")
+                .replace(".svg", ".png") 
+              }}
+              style={styles.recentFlag}
+            />
+            <View>
+              <Text style={styles.recentCountry}>{recentVisit.country_name}</Text>
+              <Text style={styles.recentDate}>
+                {new Date(recentVisit.date_visited).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
 
       <View style={styles.premiumActionsCard}>
         <View style={styles.premiumActionsHeader}>
@@ -258,8 +276,7 @@ export default function ProfilePage() {
         </Pressable>
       </View>
 
-      <WorldCoverageCard percent={USER.worldExplored} />
-      <WorldCoverageCard percent={worldPercent} />
+      <WorldCoverageCard percent={worldPercent} visitedCountries={visitedCountries} />
 
       <Text style={styles.sectionTitle}>Featured Trips</Text>
       <ScrollView
