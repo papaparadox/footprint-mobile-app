@@ -119,7 +119,7 @@
 //     backgroundColor: "transparent",
 //   },
 // });
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Platform } from "react-native";
 import { WebView } from "react-native-webview";
 import { useEffect, useRef } from "react";
 
@@ -238,7 +238,7 @@ const html = `
 </html>
 `;
 
-export default function GlobeView({ onMessage, selectedCountries = [] }) {
+export default function GlobeView({ onMessage, selectedCountries = [], onTouchStart, onTouchEnd }) {
   const webViewRef = useRef(null);
 
   const injectSelectedCountries = () => {
@@ -258,7 +258,11 @@ export default function GlobeView({ onMessage, selectedCountries = [] }) {
   }, [selectedCountries]);
 
   return (
-    <View style={styles.container}>
+    <View 
+      style={styles.container}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
       <WebView
         ref={webViewRef}
         originWhitelist={["*"]}
@@ -267,6 +271,7 @@ export default function GlobeView({ onMessage, selectedCountries = [] }) {
         domStorageEnabled
         onMessage={onMessage}
         onLoad={handleWebViewLoad}
+        scrollEnabled={false}
         style={styles.webview}
       />
     </View>

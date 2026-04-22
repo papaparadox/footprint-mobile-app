@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { getStats } from "../services/statsService";
 import { getTripsByUser } from "../services/tripService";
 import { getVisitedByUser } from "../services/visitedService";
 import GlobeView from "../components/GlobeView";
+import { RefreshControl } from "react-native";
 
 const USER = {
   name: "Maya Reyes",
@@ -38,6 +39,16 @@ const TRIPS = [
 ];
 
 const MEMORIES = [null, null, null];
+
+const CONTINENT_TOTALS = {
+  "Africa": 54,
+  "Asia": 47,
+  "Europe": 44,
+  "North America": 23,
+  "South America": 12,
+  "Oceania": 14,
+  "Antarctica": 1,
+}
 
 function Avatar({ source }) {
   return (
@@ -65,23 +76,8 @@ function StatPill({ emoji, value, label }) {
   );
 }
 
-function WorldCoverageCard({ percent, visitedCountries }) {
+function WorldCoverageCard({ percent, visitedCountries, onGlobeTouchStart, onGlobeTouchEnd }) {
   return (
-    // <View style={styles.coverageCard}>
-    //   <View style={styles.coverageHeader}>
-    //     <Text style={styles.coverageEmoji}>🌐</Text>
-    //     <Text style={styles.coverageTitle}>World Coverage</Text>
-    //   </View>
-    //   <View style={styles.miniMapPlaceholder}>
-    //     <Text style={styles.miniMap}>[ Mini Map Card ]</Text>
-    //   </View>
-    //   <Text style={styles.coveragePercent}>
-    //     {percent}% of the world explored
-    //   </Text>
-    //   <View style={styles.progressBarTrack}>
-    //     <View style={[styles.progressBarFill, { width: `${percent}%` }]} />
-    //   </View>
-    // </View>
     <View style={styles.mapCard}>
       <View style={styles.mapHeader}>
         <Text style={styles.mapEmoji}>🌐</Text>
@@ -89,7 +85,12 @@ function WorldCoverageCard({ percent, visitedCountries }) {
         <Text style={styles.mapPercent}>{percent}%</Text>
       </View>
 
-      <GlobeView selectedCountries={visitedCountries} onMessage={() => {}} />
+      <GlobeView 
+        selectedCountries={visitedCountries} 
+        onMessage={() => {}} 
+        onTouchStart={onGlobeTouchStart}
+        onTouchEnd={onGlobeTouchEnd}
+      />
 
       <View style={styles.progressBarTrack}>
         <View style={[styles.progressBarFill, { width: `${percent}%` }]} />
@@ -123,47 +124,48 @@ export default function ProfilePage() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [recentVisit, setRecentVisit] = useState(null);
   const [visitedCountries, setVisitedCountries] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [globeTouched, setGlobeTouched] = useState(false);
+  const [continents, setContinents] = useState([]);
+
+  const fetchAll = async () => {
+    try {
+      const userData = await getProfile();
+      setUser(userData);
+
+      const [statsResult, tripsResult, visitedResult] = await Promise.allSettled([
+        getStats(userData.id),
+        getTripsByUser(userData.id),
+        getVisitedByUser(userData.id),
+      ]);
+
+      if (statsResult.status === "fulfilled") {
+        setStats(statsResult.value.stats);
+        setRecentVisit(statsResult.value.recentVisit);
+        setContinents(statsResult.value.continents ?? []);
+      }
+      if (tripsResult.status === "fulfilled") setTrips(tripsResult.value ?? []);
+      if (visitedResult.status === "fulfilled") {
+        const names = [...new Set(visitedResult.value.map((v) => v.country_name))];
+        setVisitedCountries(names);
+      }
+    } catch (err) {
+      console.log("fetchAll error:", err.message);
+    } finally {
+      setProfileLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     if (authLoading || !isAuthenticated) return;
-
-    async function fetchAll() {
-      try {
-        const userData = await getProfile();
-        setUser(userData);
-
-        const [statsResult, tripsResult, visitedResult] =
-          await Promise.allSettled([
-            getStats(userData.id),
-            getTripsByUser(userData.id),
-            getVisitedByUser(userData.id),
-          ]);
-
-        console.log("statsResult:", JSON.stringify(statsResult));
-        console.log("tripsResult:", JSON.stringify(tripsResult));
-
-        if (statsResult.status === "fulfilled") {
-          setStats(statsResult.value.stats);
-          setRecentVisit(statsResult.value.recentVisit);
-        }
-        if (tripsResult.status === "fulfilled")
-          setTrips(tripsResult.value ?? []);
-        if (visitedResult.status === "fulfilled") {
-          const names = [
-            ...new Set(visitedResult.value.map((v) => v.country_name)),
-          ];
-          console.log("visited country names:", names);
-          setVisitedCountries(names);
-        }
-      } catch (err) {
-        console.log("fetchAll error:", err.message);
-      } finally {
-        setProfileLoading(false);
-      }
-    }
-
     fetchAll();
   }, [isAuthenticated, authLoading]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchAll();
+  };
 
   async function handleLogout() {
     await signOut();
@@ -186,6 +188,15 @@ export default function ProfilePage() {
       style={styles.screen}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
+      scrollEnabled={!globeTouched}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={COLOURS.accent}
+          colors={[COLOURS.accent]}
+        />
+      }
     >
       <View style={styles.headerRow}>
         <Avatar source={null} />
@@ -197,43 +208,10 @@ export default function ProfilePage() {
       </View>
 
       <View style={styles.statsRow}>
-        <StatPill
-          emoji="🌍"
-          value={stats?.countries_visited ?? 0}
-          label="Countries"
-        />
-        <StatPill
-          emoji="🌐"
-          value={stats?.continents_visited ?? 0}
-          label="Continents"
-        />
+        <StatPill emoji="🌍" value={stats?.countries_visited ?? 0} label="Countries" />
+        <StatPill emoji="🌐" value={stats?.continents_visited ?? 0} label="Continents" />
         <StatPill emoji="✈️" value={trips.length} label="Trips" />
       </View>
-
-      {recentVisit && (
-        <View style={styles.recentCard}>
-          <Text style={styles.recentLabel}>Most Recent Visit</Text>
-          <View style={styles.recentRow}>
-            <Image
-              source={{ uri: recentVisit.flag_url
-                .replace("https://flagcdn.com/", "https://flagcdn.com/w80/")
-                .replace(".svg", ".png") 
-              }}
-              style={styles.recentFlag}
-            />
-            <View>
-              <Text style={styles.recentCountry}>{recentVisit.country_name}</Text>
-              <Text style={styles.recentDate}>
-                {new Date(recentVisit.date_visited).toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </Text>
-            </View>
-          </View>
-        </View>
-      )}
 
       <View style={styles.premiumActionsCard}>
         <View style={styles.premiumActionsHeader}>
@@ -263,7 +241,7 @@ export default function ProfilePage() {
 
         <Pressable
           style={styles.premiumFriendsTile}
-          onPress={() => router.push("/friends")}
+          onPress={() => {}}
         >
           <View style={styles.premiumFriendsLeft}>
             <View>
@@ -273,14 +251,68 @@ export default function ProfilePage() {
               </Text>
             </View>
           </View>
-
           <View style={styles.premiumBadge}>
             <Text style={styles.premiumBadgeText}>2</Text>
           </View>
         </Pressable>
       </View>
 
-      <WorldCoverageCard percent={worldPercent} visitedCountries={visitedCountries} />
+      {recentVisit && (
+        <View style={styles.recentCard}>
+          <Text style={styles.recentLabel}>Most Recent Visit</Text>
+          <View style={styles.recentRow}>
+            <Image
+              source={{ uri: recentVisit.flag_url
+                .replace("https://flagcdn.com/", "https://flagcdn.com/w80/")
+                .replace(".svg", ".png")
+              }}
+              style={styles.recentFlag}
+            />
+            <View>
+              <Text style={styles.recentCountry}>{recentVisit.country_name}</Text>
+              <Text style={styles.recentDate}>
+                {new Date(recentVisit.date_visited).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {continents.length > 0 && (
+        <View style={styles.continentCard}>
+          <Text style={styles.continentTitle}>Continents Explored</Text>
+          {continents.map((c) => {
+            const total = CONTINENT_TOTALS[c.continent] || 1;
+            const percent = Math.round((parseInt(c.countries_count) / total) * 100);
+
+            return (
+              <View key={c.continent} style={styles.continentRow}>
+                <Text style={styles.continentName}>{c.continent}</Text>
+                <View style={styles.continentBarTrack}>
+                  <View style={[
+                    styles.continentBarFill,
+                    { width: `${percent}%` }
+                  ]} />
+                </View>
+                <Text style={styles.continentCount}>
+                  {c.countries_count}/{total}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      )}
+
+      <WorldCoverageCard 
+        percent={worldPercent} 
+        visitedCountries={visitedCountries}
+        onGlobeTouchStart={() => setGlobeTouched(true)}
+        onGlobeTouchEnd={() => setGlobeTouched(false)}
+      />
 
       <Text style={styles.sectionTitle}>Featured Trips</Text>
       <ScrollView
@@ -289,9 +321,9 @@ export default function ProfilePage() {
         contentContainerStyle={styles.tripsRow}
       >
         {trips.length > 0 ? (
-          trips
-            .slice(0, 5)
-            .map((trip) => <TripCard key={trip.id} title={trip.title} />)
+          trips.slice(0, 5).map((trip) => (
+            <TripCard key={trip.id} title={trip.title} />
+          ))
         ) : (
           <Text style={styles.emptyTrips}>No trips yet.</Text>
         )}
@@ -711,5 +743,57 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     color: COLOURS.accent,
+  },
+  continentCard: {
+    backgroundColor: COLOURS.card,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: COLOURS.border,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  continentTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: COLOURS.accent,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    marginBottom: 12,
+  },
+  continentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    gap: 10,
+  },
+  continentName: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: COLOURS.text,
+    width: 90,
+  },
+  continentBarTrack: {
+    flex: 1,
+    height: 6,
+    backgroundColor: COLOURS.progressBg,
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  continentBarFill: {
+    height: "100%",
+    backgroundColor: COLOURS.accent,
+    borderRadius: 3,
+  },
+  continentCount: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: COLOURS.textMuted,
+    width: 36,
+    textAlign: "right",
   },
 });
