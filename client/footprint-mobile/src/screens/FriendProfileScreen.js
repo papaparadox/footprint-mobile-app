@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 20,
     paddingTop: 18,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   centered: {
     flex: 1,

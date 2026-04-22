@@ -7,8 +7,10 @@ import {
   Pressable,
   ActivityIndicator,
   useWindowDimensions,
+  Image,
 } from "react-native";
 import { router } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import FormInput from "../components/FormInput";
 import PrimaryButton from "../components/PrimaryButton";
 import COLOURS from "../constants/colours";
@@ -38,6 +40,7 @@ export default function EditProfileScreen() {
   const [serverError, setServerError] = useState("");
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
+  const [profilePhoto, setProfilePhoto] = useState(null);
 
   useEffect(() => {
     async function loadProfile() {
@@ -177,8 +180,32 @@ export default function EditProfileScreen() {
     router.replace("/profile");
   }
 
-  function handleChangePhoto() {
-    console.log("Open image picker here");
+  async function handleChangePhoto() {
+    try {
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permissionResult.granted) {
+        setServerError("Permission to access photos was denied.");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (result.canceled) return;
+
+      const selectedAsset = result.assets?.[0];
+      if (selectedAsset?.uri) {
+        setProfilePhoto(selectedAsset.uri);
+      }
+    } catch (error) {
+      setServerError("Failed to select image.");
+    }
   }
 
   if (initialLoading) {
@@ -229,9 +256,16 @@ export default function EditProfileScreen() {
           <View style={styles.avatarSectionCompact}>
             <View style={styles.avatarRowCompact}>
               <View style={styles.avatarRingCompact}>
-                <View style={styles.avatarPlaceholderCompact}>
-                  <Text style={styles.avatarEmojiCompact}>👤</Text>
-                </View>
+                {profilePhoto ? (
+                  <Image
+                    source={{ uri: profilePhoto }}
+                    style={styles.avatarImageCompact}
+                  />
+                ) : (
+                  <View style={styles.avatarPlaceholderCompact}>
+                    <Text style={styles.avatarEmojiCompact}>👤</Text>
+                  </View>
+                )}
               </View>
 
               <View style={styles.avatarInfoCompact}>
@@ -479,6 +513,11 @@ const styles = StyleSheet.create({
     backgroundColor: COLOURS.card,
     justifyContent: "center",
     alignItems: "center",
+  },
+  avatarImageCompact: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
   },
   avatarEmojiCompact: {
     fontSize: 20,
