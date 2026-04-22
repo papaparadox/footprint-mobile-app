@@ -16,7 +16,7 @@ function RootLayout() {
           backgroundColor: "#F5F0E8",
         }}
       >
-        <ActivityIndicator size='large' color='#C47B2B' />
+        <ActivityIndicator size="large" color="#C47B2B" />
       </View>
     );
   }
@@ -24,8 +24,9 @@ function RootLayout() {
   if (!isAuthenticated) {
     return (
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name='login' />
-        <Stack.Screen name='registration' />
+        <Stack.Screen name="index" />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="registration" />
       </Stack>
     );
   }
@@ -53,68 +54,40 @@ function RootLayout() {
       }}
     >
       <Tabs.Screen
-        name='index'
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name='home-outline' size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name='countries'
+        name="countries"
         options={{
           title: "Countries",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name='globe-outline' size={size} color={color} />
+            <Ionicons name="globe-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name='trips'
+        name="trips"
         options={{
           title: "Trips",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name='airplane-outline' size={size} color={color} />
+            <Ionicons name="airplane-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name='profile'
+        name="profile"
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name='person-outline' size={size} color={color} />
+            <Ionicons name="person-outline" size={size} color={color} />
           ),
         }}
       />
 
-      <Tabs.Screen
-        name="registration"
-        options={{
-          href: null,
-        }}
-      />
-
-      <Tabs.Screen
-        name="login"
-        options={{
-          href: null,
-        }}
-      />
-
-      <Tabs.Screen
-      name="share"
-      options={{
-        href:null,
-      }}
-      />
-
-      <Tabs.Screen
-        name="trip/[id]"
-        options={{ href: null }}
-      />
-      
+      <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen name="registration" options={{ href: null }} />
+      <Tabs.Screen name="login" options={{ href: null }} />
+      <Tabs.Screen name="share" options={{ href: null }} />
+      <Tabs.Screen name="trip/[id]" options={{ href: null }} />
+      <Tabs.Screen name="editProfile" options={{ href: null }} />
+      <Tabs.Screen name="friends" options={{ href: null }} />
     </Tabs>
   );
 }

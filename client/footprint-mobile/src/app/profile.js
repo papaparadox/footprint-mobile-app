@@ -14,6 +14,8 @@ import { useAuth } from "../context/AuthContext";
 import { getProfile } from "../services/userService";
 import { getStats } from "../services/statsService";
 import { getTripsByUser } from "../services/tripService";
+import { getVisitedByUser } from "../services/visitedService";
+import GlobeView from "../components/GlobeView";
 
 const USER = {
   name: "Maya Reyes",
@@ -63,22 +65,38 @@ function StatPill({ emoji, value, label }) {
   );
 }
 
-function WorldCoverageCard({ percent }) {
+function WorldCoverageCard({ percent, visitedCountries }) {
   return (
-    <View style={styles.coverageCard}>
-      <View style={styles.coverageHeader}>
-        <Text style={styles.coverageEmoji}>🌐</Text>
-        <Text style={styles.coverageTitle}>World Coverage</Text>
+    // <View style={styles.coverageCard}>
+    //   <View style={styles.coverageHeader}>
+    //     <Text style={styles.coverageEmoji}>🌐</Text>
+    //     <Text style={styles.coverageTitle}>World Coverage</Text>
+    //   </View>
+    //   <View style={styles.miniMapPlaceholder}>
+    //     <Text style={styles.miniMap}>[ Mini Map Card ]</Text>
+    //   </View>
+    //   <Text style={styles.coveragePercent}>
+    //     {percent}% of the world explored
+    //   </Text>
+    //   <View style={styles.progressBarTrack}>
+    //     <View style={[styles.progressBarFill, { width: `${percent}%` }]} />
+    //   </View>
+    // </View>
+    <View style={styles.mapCard}>
+      <View style={styles.mapHeader}>
+        <Text style={styles.mapEmoji}>🌐</Text>
+        <Text style={styles.mapTitle}>World Coverage</Text>
+        <Text style={styles.mapPercent}>{percent}%</Text>
       </View>
-      <View style={styles.miniMapPlaceholder}>
-        <Text style={styles.miniMap}>[ Mini Map Card ]</Text>
+
+      <GlobeView selectedCountries={visitedCountries} onMessage={() => {}} />
+
+      <View style={styles.progressBarTrack}>
+        <View style={[styles.progressBarFill, { width: `${percent}%` }]} />
       </View>
       <Text style={styles.coveragePercent}>
         {percent}% of the world explored
       </Text>
-      <View style={styles.progressBarTrack}>
-        <View style={[styles.progressBarFill, { width: `${percent}%` }]} />
-      </View>
     </View>
   );
 }
@@ -103,6 +121,8 @@ export default function ProfilePage() {
   const [stats, setStats] = useState(null);
   const [trips, setTrips] = useState([]);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [recentVisit, setRecentVisit] = useState(null);
+  const [visitedCountries, setVisitedCountries] = useState([]);
 
   useEffect(() => {
     if (authLoading || !isAuthenticated) return;
@@ -112,15 +132,31 @@ export default function ProfilePage() {
         const userData = await getProfile();
         setUser(userData);
 
-        const [statsResult, tripsResult] = await Promise.allSettled([
-          getStats(userData.id),
-          getTripsByUser(userData.id),
-        ]);
+        const [statsResult, tripsResult, visitedResult] =
+          await Promise.allSettled([
+            getStats(userData.id),
+            getTripsByUser(userData.id),
+            getVisitedByUser(userData.id),
+          ]);
 
-        if (statsResult.status === "fulfilled") setStats(statsResult.value);
+        console.log("statsResult:", JSON.stringify(statsResult));
+        console.log("tripsResult:", JSON.stringify(tripsResult));
+
+        if (statsResult.status === "fulfilled") {
+          setStats(statsResult.value.stats);
+          setRecentVisit(statsResult.value.recentVisit);
+        }
         if (tripsResult.status === "fulfilled")
           setTrips(tripsResult.value ?? []);
-      } catch {
+        if (visitedResult.status === "fulfilled") {
+          const names = [
+            ...new Set(visitedResult.value.map((v) => v.country_name)),
+          ];
+          console.log("visited country names:", names);
+          setVisitedCountries(names);
+        }
+      } catch (err) {
+        console.log("fetchAll error:", err.message);
       } finally {
         setProfileLoading(false);
       }
@@ -142,7 +178,7 @@ export default function ProfilePage() {
   }
 
   const worldPercent = stats?.countries_visited
-    ? Math.round((stats.countries_visited / 195) * 100) 
+    ? Math.round((stats.countries_visited / 195) * 100)
     : 0;
 
   return (
@@ -167,31 +203,80 @@ export default function ProfilePage() {
           label="Countries"
         />
         <StatPill
-          emoji="📊"
-          value={stats?.cities_visited ?? 0}
-          label="Cities"
+          emoji="🌐"
+          value={stats?.continents_visited ?? 0}
+          label="Continents"
         />
         <StatPill emoji="✈️" value={trips.length} label="Trips" />
       </View>
 
-      <View style={styles.actionButtonsRow}>
-        <Pressable
-          style={styles.shareButton}
-          onPress={() => router.push("/share")}
-        >
-          <Text style={styles.shareButtonText}>🔗 Share Profile</Text>
-        </Pressable>
+      {recentVisit && (
+        <View style={styles.recentCard}>
+          <Text style={styles.recentLabel}>Most Recent Visit</Text>
+          <View style={styles.recentRow}>
+            <Image
+              source={{ uri: recentVisit.flag_url
+                .replace("https://flagcdn.com/", "https://flagcdn.com/w80/")
+                .replace(".svg", ".png") 
+              }}
+              style={styles.recentFlag}
+            />
+            <View>
+              <Text style={styles.recentCountry}>{recentVisit.country_name}</Text>
+              <Text style={styles.recentDate}>
+                {new Date(recentVisit.date_visited).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
+
+      <View style={styles.premiumActionsCard}>
+        <View style={styles.premiumActionsHeader}>
+          <Text style={styles.premiumActionsTitle}>Profile Studio</Text>
+          <Text style={styles.premiumActionsSubtitle}>
+            Share, refine and grow your travel identity
+          </Text>
+        </View>
+
+        <View style={styles.premiumTopRow}>
+          <Pressable
+            style={[styles.premiumActionTile, styles.premiumShareTile]}
+            onPress={() => router.push("/share")}
+          >
+            <Text style={styles.premiumTileTitle}>Share Profile</Text>
+            <Text style={styles.premiumTileSubtitle}>Send your journey</Text>
+          </Pressable>
+
+          <Pressable
+            style={[styles.premiumActionTile, styles.premiumEditTile]}
+            onPress={() => router.push("/editProfile")}
+          >
+            <Text style={styles.premiumTileTitle}>Update Profile</Text>
+            <Text style={styles.premiumTileSubtitle}>Refine your details</Text>
+          </Pressable>
+        </View>
 
         <Pressable
-          style={styles.editButton}
-          onPress={() => router.push("/editProfile")}
+          style={styles.premiumFriendsTile}
+          onPress={() => router.push("/friends")}
         >
-          <Text style={styles.editButtonText}>Update Profile</Text>
+          <View style={styles.premiumFriendsLeft}>
+            <View>
+              <Text style={styles.premiumFriendsTitle}>Friends</Text>
+              <Text style={styles.premiumFriendsSubtitle}>
+                View requests and connections
+              </Text>
+            </View>
+          </View>
         </Pressable>
       </View>
 
-      <WorldCoverageCard percent={USER.worldExplored} />
-      <WorldCoverageCard percent={worldPercent} />
+      <WorldCoverageCard percent={worldPercent} visitedCountries={visitedCountries} />
 
       <Text style={styles.sectionTitle}>Featured Trips</Text>
       <ScrollView
@@ -240,7 +325,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 56,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   headerRow: {
     flexDirection: "row",
@@ -290,6 +375,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 18,
+    marginTop: 12,
     gap: 8,
   },
   statPill: {
@@ -408,40 +494,218 @@ const styles = StyleSheet.create({
     borderColor: COLOURS.danger,
     alignItems: "center",
   },
-  shareButton: {
-    flex: 1,
-    backgroundColor: COLOURS.accentLight,
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: COLOURS.accent,
-  },
-  shareButtonText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: COLOURS.accent,
-  },
-  actionButtonsRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 18,
-  },
-
-  editButton: {
-    flex: 1,
+  premiumActionsCard: {
     backgroundColor: COLOURS.card,
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: "center",
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 18,
     borderWidth: 1,
     borderColor: COLOURS.border,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
 
-  editButtonText: {
+  premiumActionsHeader: {
+    marginBottom: 14,
+  },
+
+  premiumActionsTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: COLOURS.text,
+    marginBottom: 4,
+  },
+
+  premiumActionsSubtitle: {
+    fontSize: 12,
+    color: COLOURS.textSoft,
+    lineHeight: 18,
+  },
+
+  premiumTopRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 10,
+  },
+
+  premiumActionTile: {
+    flex: 1,
+    minHeight: 118,
+    borderRadius: 18,
+    paddingVertical: 18,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    justifyContent: "space-between",
+  },
+
+  premiumShareTile: {
+    backgroundColor: "#FFF6EA",
+    borderColor: "#F0D9B5",
+  },
+
+  premiumEditTile: {
+    backgroundColor: "#F9EBD3",
+    borderColor: "#E7C796",
+  },
+
+  premiumEmoji: {
+    fontSize: 24,
+    marginBottom: 10,
+  },
+
+  premiumTileTitle: {
     fontSize: 14,
     fontWeight: "700",
     color: COLOURS.text,
+    marginBottom: 4,
+  },
+
+  premiumTileSubtitle: {
+    fontSize: 11,
+    color: COLOURS.textSoft,
+    lineHeight: 16,
+  },
+
+  premiumFriendsTile: {
+    backgroundColor: COLOURS.accent,
+    borderRadius: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: "#A86622",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+
+  premiumFriendsLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  premiumFriendsIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  premiumFriendsEmoji: {
+    fontSize: 20,
+  },
+
+  premiumFriendsTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    marginBottom: 2,
+  },
+
+  premiumFriendsSubtitle: {
+    fontSize: 11,
+    color: "rgba(255,255,255,0.86)",
+  },
+
+  premiumBadge: {
+    minWidth: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 8,
+  },
+
+  premiumBadgeText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: COLOURS.accent,
   },
   logoutText: { fontSize: 14, fontWeight: "600", color: COLOURS.danger },
+  recentCard: {
+    backgroundColor: COLOURS.card,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: COLOURS.border,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  recentLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: COLOURS.accent,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    marginBottom: 10,
+  },
+  recentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  recentFlag: {
+    width: 56,
+    height: 40,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: COLOURS.border,
+    resizeMode: "cover",
+  },
+  recentCountry: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: COLOURS.text,
+    marginBottom: 2,
+  },
+  recentDate: {
+    fontSize: 12,
+    color: COLOURS.textMuted,
+  },
+  mapCard: {
+    backgroundColor: COLOURS.card,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: COLOURS.border,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  mapHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    gap: 6,
+  },
+  mapEmoji: { fontSize: 18 },
+  mapTitle: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "700",
+    color: COLOURS.text,
+  },
+  mapPercent: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: COLOURS.accent,
+  },
 });
