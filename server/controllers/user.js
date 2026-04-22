@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const UserStats = require("../models/UserStats");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -10,7 +11,7 @@ async function register(req, res) {
     data.password = await bcrypt.hash(data.password, salt);
     const newUser = await User.create(data);
 
-    const {password, ...userWithoutPassword } = newUser;
+    const { password, ...userWithoutPassword } = newUser;
     res.status(201).json(userWithoutPassword);
   } catch (err) {
     res.status(400).json({ err: err.message });
@@ -38,7 +39,7 @@ async function login(req, res) {
         id: user.id,
       },
       process.env.SECRET_TOKEN,
-      { expiresIn: "15min" },
+      { expiresIn: "1h" },
     );
 
     res.status(200).json({
@@ -92,7 +93,7 @@ async function updateUser(req, res) {
 
     if (updates.password) {
       const salt = await bcrypt.genSalt(
-        parseInt(process.env.BCRYPT_SALT_ROUNDS)
+        parseInt(process.env.BCRYPT_SALT_ROUNDS),
       );
       updates.password = await bcrypt.hash(updates.password, salt);
     }
@@ -146,10 +147,150 @@ async function deleteUser(req, res) {
   }
 }
 
+// async function getPublicProfile(req, res) {
+//   try {
+//     const profile = await User.getPublicProfile(req.params.token);
+//     res.status(200).json(profile);
+//   } catch (err) {
+//     res.status(404).json({ err: err.message });
+//   }
+// }
+
+async function getUserByUsername(req, res) {
+  try {
+    const user = await User.getByUsername(req.user.username);
+    if (!user) {
+      return res.status(404).json({ err: "User not found" });
+    }
+    res.status(200).json({
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        home_country: user.home_country,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ err: err.message });
+  }
+}
+async function getProfileStat(req, res) {
+  try {
+    const userId = req.user.id;
+
+    const user = await User.getById(userId);
+
+    if (!user) {
+      return res.status(404).json({ err: "User not found" });
+    }
+
+    const stats = await UserStats.getStats(userId);
+    const continentBreakdown = await UserStats.getContinentBreakdown(userId);
+    const mostRecentVisit = await UserStats.getMostRecentVisit(userId);
+
+    res.status(200).json({
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        home_country: user.home_country,
+      },
+      stats: {
+        countries_visited: Number(stats?.countries_visited) || 0,
+        continents_visited: Number(stats?.continents_visited) || 0,
+        cities_visited: Number(stats?.cities_visited) || 0,
+        trips_taken: Number(stats?.trips_taken) || 0,
+      },
+      continent_breakdown: continentBreakdown.map((item) => ({
+        continent: item.continent,
+        countries_count: Number(item.countries_count),
+      })),
+      most_recent_visit: mostRecentVisit,
+    });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
+}
+
+async function getPublicProfile(req, res) {
+  try {
+    const profile = await User.getPublicProfile(req.params.token);
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${profile.username}'s Footprint</title>
+          <style>
+            body { font-family: sans-serif; background: #F5F0E8; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+            .card { background: white; border-radius: 20px; padding: 32px; text-align: center; max-width: 320px; width: 90%; border: 1px solid #E2D8CC; }
+            .logo { font-size: 32px; margin-bottom: 8px; }
+            .app { font-size: 22px; font-weight: 800; color: #C47B2B; }
+            .username { font-size: 18px; font-weight: 700; color: #1C1C1E; margin: 8px 0 4px; }
+            .tagline { font-size: 13px; color: #A89B8C; margin-bottom: 20px; }
+            .divider { height: 1px; background: #E2D8CC; margin: 16px 0; }
+            .stats { display: flex; justify-content: space-around; }
+            .stat { flex: 1; }
+            .stat-value { font-size: 32px; font-weight: 800; color: #C47B2B; }
+            .stat-label { font-size: 11px; color: #A89B8C; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+            .stat-divider { width: 1px; background: #E2D8CC; }
+            .footer { font-size: 12px; color: #A89B8C; margin-top: 4px; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="logo">👣</div>
+            <div class="app">Footprint</div>
+            <div class="username">@${profile.username}</div>
+            <div class="tagline">Building my travel story</div>
+            <div class="divider"></div>
+            <div class="stats">
+              <div class="stat">
+                <div class="stat-value">${profile.countries_visited}</div>
+                <div class="stat-label">Countries</div>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat">
+                <div class="stat-value">${profile.continents_visited}</div>
+                <div class="stat-label">Continents</div>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat">
+                <div class="stat-value">${Math.round((parseInt(profile.countries_visited) / 195) * 100)}%</div>
+                <div class="stat-label">World</div>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="footer">footprint.app</div>
+          </div>
+        </body>
+      </html>
+    `);
+  } catch (err) {
+    res.status(404).json({ err: err.message });
+  }
+}
+
+async function getMyPublicToken(req, res) {
+  try {
+    const token = await User.getPublicToken(req.user.id);
+    res.status(200).json({ public_token: token });
+  } catch (err) {
+    res.status(404).json({ err: err.message });
+  }
+}
+
 module.exports = {
   register,
   login,
   getProfile,
   updateUser,
   deleteUser,
+  getUserByUsername,
+  getProfileStat,
+  // getPublicProfile,
+  getMyPublicToken,
 };

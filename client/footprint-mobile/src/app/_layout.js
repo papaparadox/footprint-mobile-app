@@ -1,12 +1,36 @@
-// import { Stack } from "expo-router";
-
-// export default function Layout() {
-//   return <Stack />;
-// }
-import { Tabs } from "expo-router";
+import { Tabs, Stack } from "expo-router";
+import { View, ActivityIndicator } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { AuthProvider, useAuth } from "../context/AuthContext";
 
-export default function Layout() {
+function RootLayout() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#F5F0E8",
+        }}
+      >
+        <ActivityIndicator size="large" color="#C47B2B" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="registration" />
+      </Stack>
+    );
+  }
+
   return (
     <Tabs
       screenOptions={{
@@ -30,16 +54,6 @@ export default function Layout() {
       }}
     >
       <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
         name="countries"
         options={{
           title: "Countries",
@@ -48,7 +62,6 @@ export default function Layout() {
           ),
         }}
       />
-
       <Tabs.Screen
         name="trips"
         options={{
@@ -58,7 +71,6 @@ export default function Layout() {
           ),
         }}
       />
-
       <Tabs.Screen
         name="profile"
         options={{
@@ -69,19 +81,21 @@ export default function Layout() {
         }}
       />
 
-      <Tabs.Screen
-        name="registration"
-        options={{
-          href: null,
-        }}
-      />
-
-      <Tabs.Screen
-        name="login"
-        options={{
-          href: null,
-        }}
-      />
+      <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen name="registration" options={{ href: null }} />
+      <Tabs.Screen name="login" options={{ href: null }} />
+      <Tabs.Screen name="share" options={{ href: null }} />
+      <Tabs.Screen name="trip/[id]" options={{ href: null }} />
+      <Tabs.Screen name="editProfile" options={{ href: null }} />
+      <Tabs.Screen name="friends" options={{ href: null }} />
     </Tabs>
+  );
+}
+
+export default function Layout() {
+  return (
+    <AuthProvider>
+      <RootLayout />
+    </AuthProvider>
   );
 }
