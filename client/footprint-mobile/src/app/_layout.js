@@ -87,11 +87,7 @@ function RootLayout() {
       <Tabs.Screen name="share" options={{ href: null }} />
       <Tabs.Screen name="trip/[id]" options={{ href: null }} />
       <Tabs.Screen name="editProfile" options={{ href: null }} />
-      <Tabs.Screen name="friends/index" options={{ href: null }} />
-      <Tabs.Screen name="friends/requests" options={{ href: null }} />
-      <Tabs.Screen name="friends/search" options={{ href: null }} />
-      <Tabs.Screen name="friends/[friendId]/compare" options={{ href: null }} />
-      <Tabs.Screen name="friends/[friendId]/profile" options={{ href: null }} />
+      <Tabs.Screen name="friends" options={{ href: null }} />
     </Tabs>
   );
 }

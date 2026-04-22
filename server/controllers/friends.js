@@ -307,7 +307,7 @@ async function getFriendProfile(req, res) {
       stats: {
         countries_visited: Number(stats?.countries_visited) || 0,
         continents_visited: Number(stats?.continents_visited) || 0,
-        world_coverage_percent: myWorldCoverage,
+        world_coverage_percent: worldCoveragePercent,
       },
       continent_breakdown: continentBreakdown.map((item) => ({
         continent: item.continent,

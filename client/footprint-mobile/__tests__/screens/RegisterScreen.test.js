@@ -3,6 +3,17 @@ import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import RegisterScreen from "../../src/screens/RegisterScreen";
 import { registerUser } from "../../src/services/authService";
 
+const mockReplace = jest.fn();
+
+jest.mock("expo-router", () => ({
+  Link: ({ children }) => children,
+  useRouter: () => ({
+    replace: mockReplace,
+    push: jest.fn(),
+    back: jest.fn(),
+  }),
+}));
+
 jest.mock("../../src/services/authService", () => ({
   registerUser: jest.fn(),
 }));
@@ -16,11 +27,18 @@ describe("RegisterScreen", () => {
     const { getByText, getByPlaceholderText } = render(<RegisterScreen />);
 
     expect(getByText("Start your journey")).toBeTruthy();
+    expect(
+      getByText("Create your account and begin building your Footprint."),
+    ).toBeTruthy();
+
     expect(getByPlaceholderText("maya_reyes")).toBeTruthy();
     expect(getByPlaceholderText("maya@example.com")).toBeTruthy();
     expect(getByPlaceholderText("At least 6 characters")).toBeTruthy();
     expect(getByPlaceholderText("United Kingdom")).toBeTruthy();
+
     expect(getByText("Create Account")).toBeTruthy();
+    expect(getByText("Already have an account? ")).toBeTruthy();
+    expect(getByText("Log in")).toBeTruthy();
   });
 
   it("shows validation errors when fields are empty", async () => {
@@ -34,28 +52,65 @@ describe("RegisterScreen", () => {
     expect(await findByText("Home country is required.")).toBeTruthy();
   });
 
+  it("shows validation error when username is too short", async () => {
+    const { getByPlaceholderText, getByText, findByText } = render(
+      <RegisterScreen />,
+    );
+
+    fireEvent.changeText(getByPlaceholderText("maya_reyes"), "ab");
+    fireEvent.changeText(
+      getByPlaceholderText("maya@example.com"),
+      "maya@test.com",
+    );
+    fireEvent.changeText(
+      getByPlaceholderText("At least 6 characters"),
+      "123456",
+    );
+    fireEvent.changeText(getByPlaceholderText("United Kingdom"), "Spain");
+
+    fireEvent.press(getByText("Create Account"));
+
+    expect(
+      await findByText("Username must be at least 3 characters."),
+    ).toBeTruthy();
+  });
+
   it("shows validation error for invalid email", async () => {
-    const { getByPlaceholderText, getByText, findByText } = render(<RegisterScreen />);
+    const { getByPlaceholderText, getByText, findByText } = render(
+      <RegisterScreen />,
+    );
 
     fireEvent.changeText(getByPlaceholderText("maya_reyes"), "maya");
     fireEvent.changeText(getByPlaceholderText("maya@example.com"), "bad-email");
-    fireEvent.changeText(getByPlaceholderText("At least 6 characters"), "123456");
+    fireEvent.changeText(
+      getByPlaceholderText("At least 6 characters"),
+      "123456",
+    );
     fireEvent.changeText(getByPlaceholderText("United Kingdom"), "Spain");
+
     fireEvent.press(getByText("Create Account"));
 
     expect(await findByText("Enter a valid email address.")).toBeTruthy();
   });
 
   it("shows validation error for short password", async () => {
-    const { getByPlaceholderText, getByText, findByText } = render(<RegisterScreen />);
+    const { getByPlaceholderText, getByText, findByText } = render(
+      <RegisterScreen />,
+    );
 
     fireEvent.changeText(getByPlaceholderText("maya_reyes"), "maya");
-    fireEvent.changeText(getByPlaceholderText("maya@example.com"), "maya@test.com");
+    fireEvent.changeText(
+      getByPlaceholderText("maya@example.com"),
+      "maya@test.com",
+    );
     fireEvent.changeText(getByPlaceholderText("At least 6 characters"), "123");
     fireEvent.changeText(getByPlaceholderText("United Kingdom"), "Spain");
+
     fireEvent.press(getByText("Create Account"));
 
-    expect(await findByText("Password must be at least 6 characters.")).toBeTruthy();
+    expect(
+      await findByText("Password must be at least 6 characters."),
+    ).toBeTruthy();
   });
 
   it("calls registerUser with correct payload", async () => {
@@ -69,23 +124,36 @@ describe("RegisterScreen", () => {
     const { getByPlaceholderText, getByText } = render(<RegisterScreen />);
 
     fireEvent.changeText(getByPlaceholderText("maya_reyes"), "maya");
-    fireEvent.changeText(getByPlaceholderText("maya@example.com"), "maya@test.com");
-    fireEvent.changeText(getByPlaceholderText("At least 6 characters"), "123456");
+    fireEvent.changeText(
+      getByPlaceholderText("maya@example.com"),
+      "maya@test.com",
+    );
+    fireEvent.changeText(
+      getByPlaceholderText("At least 6 characters"),
+      "123456",
+    );
     fireEvent.changeText(getByPlaceholderText("United Kingdom"), "Spain");
+
     fireEvent.press(getByText("Create Account"));
 
     await waitFor(() => {
-      expect(registerUser).toHaveBeenCalledWith({
-        id: null,
-        username: "maya",
-        email: "maya@test.com",
-        password: "123456",
-        home_country: "Spain",
-      });
+      expect(registerUser).toHaveBeenCalledTimes(1);
+    });
+
+    const payload = registerUser.mock.calls[0][0];
+
+    expect(payload).toMatchObject({
+      id: null,
+      username: "maya",
+      email: "maya@test.com",
+      password: "123456",
+      home_country: "Spain",
     });
   });
 
   it("shows success message on successful registration", async () => {
+    jest.useFakeTimers();
+
     registerUser.mockResolvedValue({
       id: 1,
       username: "maya",
@@ -93,28 +161,93 @@ describe("RegisterScreen", () => {
       home_country: "Spain",
     });
 
-    const { getByPlaceholderText, getByText, findByText } = render(<RegisterScreen />);
+    const { getByPlaceholderText, getByText, findByText } = render(
+      <RegisterScreen />,
+    );
 
     fireEvent.changeText(getByPlaceholderText("maya_reyes"), "maya");
-    fireEvent.changeText(getByPlaceholderText("maya@example.com"), "maya@test.com");
-    fireEvent.changeText(getByPlaceholderText("At least 6 characters"), "123456");
+    fireEvent.changeText(
+      getByPlaceholderText("maya@example.com"),
+      "maya@test.com",
+    );
+    fireEvent.changeText(
+      getByPlaceholderText("At least 6 characters"),
+      "123456",
+    );
     fireEvent.changeText(getByPlaceholderText("United Kingdom"), "Spain");
+
     fireEvent.press(getByText("Create Account"));
 
     expect(await findByText("Account created successfully.")).toBeTruthy();
+
+    await waitFor(() => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    expect(mockReplace).toHaveBeenCalledWith("/login");
+
+    jest.useRealTimers();
   });
 
   it("shows server error when registration fails", async () => {
     registerUser.mockRejectedValue(new Error("Email already in use"));
 
-    const { getByPlaceholderText, getByText, findByText } = render(<RegisterScreen />);
+    const { getByPlaceholderText, getByText, findByText } = render(
+      <RegisterScreen />,
+    );
 
     fireEvent.changeText(getByPlaceholderText("maya_reyes"), "maya");
-    fireEvent.changeText(getByPlaceholderText("maya@example.com"), "maya@test.com");
-    fireEvent.changeText(getByPlaceholderText("At least 6 characters"), "123456");
+    fireEvent.changeText(
+      getByPlaceholderText("maya@example.com"),
+      "maya@test.com",
+    );
+    fireEvent.changeText(
+      getByPlaceholderText("At least 6 characters"),
+      "123456",
+    );
     fireEvent.changeText(getByPlaceholderText("United Kingdom"), "Spain");
+
     fireEvent.press(getByText("Create Account"));
 
     expect(await findByText("Email already in use")).toBeTruthy();
+  });
+
+  it("shows loading label while registration is in progress", async () => {
+    let resolvePromise;
+
+    registerUser.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolvePromise = resolve;
+        }),
+    );
+
+    const { getByPlaceholderText, getByText } = render(<RegisterScreen />);
+
+    fireEvent.changeText(getByPlaceholderText("maya_reyes"), "maya");
+    fireEvent.changeText(
+      getByPlaceholderText("maya@example.com"),
+      "maya@test.com",
+    );
+    fireEvent.changeText(
+      getByPlaceholderText("At least 6 characters"),
+      "123456",
+    );
+    fireEvent.changeText(getByPlaceholderText("United Kingdom"), "Spain");
+
+    fireEvent.press(getByText("Create Account"));
+
+    expect(getByText("Creating Account...")).toBeTruthy();
+
+    resolvePromise({
+      id: 1,
+      username: "maya",
+      email: "maya@test.com",
+      home_country: "Spain",
+    });
+
+    await waitFor(() => {
+      expect(registerUser).toHaveBeenCalled();
+    });
   });
 });
