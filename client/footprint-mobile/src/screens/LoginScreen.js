@@ -44,7 +44,7 @@ export default function LoginScreen() {
       setLoading(true);
       const data = await loginUser(form.email.trim(), form.password);
       await signIn(data.token);
-      // router.replace("/countries");
+      router.replace("/countries");
     } catch (error) {
       setServerError(error.message);
     } finally {
@@ -110,6 +110,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: COLOURS.bg },
   scrollContent: { paddingHorizontal: 20, paddingTop: 56, paddingBottom: 40 },
   heroCard: {
+    marginTop: 25,
     backgroundColor: COLOURS.card,
     borderRadius: 18,
     padding: 20,

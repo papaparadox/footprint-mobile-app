@@ -4,14 +4,37 @@ import {
   Text,
   ScrollView,
   StyleSheet,
+  Pressable,
   ActivityIndicator,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
-import COLOURS from "../constants/colours";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { getFriendProfile } from "../services/friendService";
 
+const COLOURS = {
+  bg: "#F5F0E8",
+  card: "#FFFFFF",
+  accent: "#C47B2B",
+  accentLight: "#F0D9B5",
+  text: "#1C1C1E",
+  textSoft: "#6B6055",
+  textMuted: "#A89B8C",
+  border: "#E2D8CC",
+  danger: "#C0392B",
+};
+
+function StatBox({ value, label }) {
+  return (
+    <View style={styles.statBox}>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
 export default function FriendProfileScreen() {
+  const router = useRouter();
   const { friendId } = useLocalSearchParams();
+
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [serverError, setServerError] = useState("");
@@ -42,58 +65,77 @@ export default function FriendProfileScreen() {
   if (serverError) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.error}>{serverError}</Text>
+        <Text style={styles.errorText}>{serverError}</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.heroCard}>
-        <Text style={styles.title}>{profile?.user?.username}</Text>
-        <Text style={styles.subtitle}>{profile?.user?.home_country}</Text>
+        <View style={styles.avatarWrap}>
+          <Text style={styles.avatarEmoji}>👤</Text>
+        </View>
+
+        <Text style={styles.heroTitle}>{profile?.user?.username}</Text>
+        <Text style={styles.heroSubtitle}>
+          {profile?.user?.home_country || "Unknown country"}
+        </Text>
       </View>
 
       <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>
-            {profile?.stats?.countries_visited ?? 0}
-          </Text>
-          <Text style={styles.statLabel}>Countries</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>
-            {profile?.stats?.continents_visited ?? 0}
-          </Text>
-          <Text style={styles.statLabel}>Continents</Text>
-        </View>
+        <StatBox
+          value={profile?.stats?.countries_visited ?? 0}
+          label="Countries"
+        />
+        <StatBox
+          value={profile?.stats?.continents_visited ?? 0}
+          label="Continents"
+        />
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Continent Breakdown</Text>
+      <View style={styles.infoCard}>
+        <Text style={styles.cardTitle}>Continent Breakdown</Text>
+
         {profile?.continent_breakdown?.length > 0 ? (
           profile.continent_breakdown.map((item, index) => (
-            <Text key={index} style={styles.itemText}>
-              {item.continent}: {item.countries_count}
-            </Text>
+            <View key={index} style={styles.breakdownRow}>
+              <Text style={styles.breakdownLabel}>{item.continent}</Text>
+              <Text style={styles.breakdownValue}>{item.countries_count}</Text>
+            </View>
           ))
         ) : (
           <Text style={styles.emptyText}>No continent data yet.</Text>
         )}
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Most Recent Visit</Text>
+      <View style={styles.infoCard}>
+        <Text style={styles.cardTitle}>Most Recent Visit</Text>
+
         {profile?.most_recent_visit ? (
-          <Text style={styles.itemText}>
-            {profile.most_recent_visit.country_name} (
-            {profile.most_recent_visit.iso_code})
-          </Text>
+          <>
+            <Text style={styles.visitCountry}>
+              {profile.most_recent_visit.country_name}
+            </Text>
+            <Text style={styles.visitMeta}>
+              {profile.most_recent_visit.iso_code}
+            </Text>
+          </>
         ) : (
           <Text style={styles.emptyText}>No recent visit yet.</Text>
         )}
       </View>
+
+      <Pressable
+        style={styles.compareButton}
+        onPress={() => router.push(`/friends/${friendId}/compare`)}
+      >
+        <Text style={styles.compareButtonText}>Compare Journeys</Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -103,85 +145,132 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLOURS.bg,
   },
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 40,
+  },
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: COLOURS.bg,
   },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 56,
-    paddingBottom: 40,
-  },
   heroCard: {
     backgroundColor: COLOURS.card,
-    borderRadius: 18,
-    padding: 20,
+    borderRadius: 20,
+    padding: 22,
     borderWidth: 1,
     borderColor: COLOURS.border,
+    alignItems: "center",
     marginBottom: 16,
   },
-  title: {
-    fontSize: 24,
+  avatarWrap: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: COLOURS.accentLight,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  avatarEmoji: {
+    fontSize: 34,
+  },
+  heroTitle: {
+    fontSize: 22,
     fontWeight: "700",
     color: COLOURS.text,
+    marginBottom: 4,
   },
-  subtitle: {
+  heroSubtitle: {
     fontSize: 14,
     color: COLOURS.textSoft,
-    marginTop: 6,
   },
   statsRow: {
     flexDirection: "row",
     gap: 10,
     marginBottom: 16,
   },
-  statCard: {
+  statBox: {
     flex: 1,
     backgroundColor: COLOURS.card,
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
     borderWidth: 1,
     borderColor: COLOURS.border,
     alignItems: "center",
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "700",
-    color: COLOURS.text,
+    color: COLOURS.accent,
+    marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
     color: COLOURS.textSoft,
-    marginTop: 4,
   },
-  card: {
+  infoCard: {
     backgroundColor: COLOURS.card,
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 16,
     borderWidth: 1,
     borderColor: COLOURS.border,
     marginBottom: 14,
   },
-  sectionTitle: {
+  cardTitle: {
     fontSize: 15,
     fontWeight: "700",
     color: COLOURS.text,
-    marginBottom: 10,
+    marginBottom: 12,
   },
-  itemText: {
+  breakdownRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3E7D7",
+  },
+  breakdownLabel: {
     fontSize: 13,
     color: COLOURS.textSoft,
-    marginBottom: 6,
+  },
+  breakdownValue: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: COLOURS.accent,
+  },
+  visitCountry: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: COLOURS.text,
+    marginBottom: 4,
+  },
+  visitMeta: {
+    fontSize: 13,
+    color: COLOURS.textSoft,
+  },
+  compareButton: {
+    backgroundColor: COLOURS.accent,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 4,
+  },
+  compareButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  errorText: {
+    color: COLOURS.danger,
+    fontSize: 13,
   },
   emptyText: {
     fontSize: 13,
     color: COLOURS.textMuted,
     fontStyle: "italic",
-  },
-  error: {
-    color: "#C0392B",
-    fontSize: 13,
   },
 });

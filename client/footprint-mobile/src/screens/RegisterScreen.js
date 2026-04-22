@@ -177,6 +177,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   heroCard: {
+    marginTop: 22,
     backgroundColor: COLOURS.card,
     borderRadius: 18,
     padding: 20,
