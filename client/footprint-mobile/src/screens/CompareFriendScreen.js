@@ -1,25 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  Pressable,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { compareWithFriend } from "../services/friendService";
-
-const COLOURS = {
-  bg: "#F5F0E8",
-  card: "#FFFFFF",
-  accent: "#C47B2B",
-  accentLight: "#F0D9B5",
-  text: "#1C1C1E",
-  textSoft: "#6B6055",
-  textMuted: "#A89B8C",
-  border: "#E2D8CC",
-  danger: "#C0392B",
-};
+import GlobeView from "../components/GlobeView";
+import COLOURS from "../constants/colours";
 
 function CompareStatCard({ title, countries, continents, coverage }) {
   return (
@@ -32,6 +23,92 @@ function CompareStatCard({ title, countries, continents, coverage }) {
         <Text style={styles.compareMetaText}>Continents: {continents}</Text>
         <Text style={styles.compareMetaText}>Coverage: {coverage}%</Text>
       </View>
+    </View>
+  );
+}
+
+function CompareGlobeCard({ myCountries, friendCountries, onMessage }) {
+  const [activeTab, setActiveTab] = useState("mine");
+
+  const commonCountries = useMemo(() => {
+    return myCountries.filter((country) => friendCountries.includes(country));
+  }, [myCountries, friendCountries]);
+
+  const selectedCountries = useMemo(() => {
+    if (activeTab === "mine") return myCountries;
+    if (activeTab === "friend") return friendCountries;
+    return commonCountries;
+  }, [activeTab, myCountries, friendCountries, commonCountries]);
+
+  const subtitle = useMemo(() => {
+    if (activeTab === "mine") return "Your visited countries";
+    if (activeTab === "friend") return "Friend's visited countries";
+    return "Countries you both visited";
+  }, [activeTab]);
+
+  return (
+    <View style={styles.sectionCard}>
+      <Text style={styles.sectionTitle}>Compare Globe</Text>
+      <Text style={styles.sectionSubtitle}>{subtitle}</Text>
+
+      <View style={styles.tabRow}>
+        <Pressable
+          style={[
+            styles.tabButton,
+            activeTab === "mine" && styles.activeTabButton,
+          ]}
+          onPress={() => setActiveTab("mine")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "mine" && styles.activeTabText,
+            ]}
+          >
+            Mine
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={[
+            styles.tabButton,
+            activeTab === "friend" && styles.activeTabButton,
+          ]}
+          onPress={() => setActiveTab("friend")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "friend" && styles.activeTabText,
+            ]}
+          >
+            Friend
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={[
+            styles.tabButton,
+            activeTab === "common" && styles.activeTabButton,
+          ]}
+          onPress={() => setActiveTab("common")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "common" && styles.activeTabText,
+            ]}
+          >
+            Common
+          </Text>
+        </Pressable>
+      </View>
+
+      <GlobeView selectedCountries={selectedCountries} onMessage={onMessage} />
+
+      <Text style={styles.globeCountText}>
+        Showing {selectedCountries.length} countries
+      </Text>
     </View>
   );
 }
@@ -57,6 +134,15 @@ export default function CompareFriendScreen() {
     loadComparison();
   }, [friendId]);
 
+  function handleGlobeMessage(event) {
+    try {
+      const message = JSON.parse(event.nativeEvent.data);
+      console.log("Compare globe message:", message);
+    } catch (error) {
+      console.log("Globe parse error:", error.message);
+    }
+  }
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -72,6 +158,19 @@ export default function CompareFriendScreen() {
       </View>
     );
   }
+
+  const commonCountries =
+    comparison?.overlap?.common_countries?.map((country) => country.name) || [];
+
+  const myCountries = [
+    ...(comparison?.overlap?.only_mine?.map((country) => country.name) || []),
+    ...commonCountries,
+  ];
+
+  const friendCountries = [
+    ...(comparison?.overlap?.only_theirs?.map((country) => country.name) || []),
+    ...commonCountries,
+  ];
 
   return (
     <ScrollView
@@ -99,6 +198,12 @@ export default function CompareFriendScreen() {
         countries={comparison?.friend_stats?.countries_visited ?? 0}
         continents={comparison?.friend_stats?.continents_visited ?? 0}
         coverage={comparison?.friend_stats?.world_coverage_percent ?? 0}
+      />
+
+      <CompareGlobeCard
+        myCountries={myCountries}
+        friendCountries={friendCountries}
+        onMessage={handleGlobeMessage}
       />
 
       <View style={styles.sectionCard}>
@@ -232,7 +337,44 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     color: COLOURS.text,
-    marginBottom: 10,
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 12,
+    color: COLOURS.textSoft,
+    marginBottom: 12,
+  },
+  tabRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 12,
+  },
+  tabButton: {
+    flex: 1,
+    backgroundColor: COLOURS.card,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLOURS.border,
+    paddingVertical: 8,
+    alignItems: "center",
+  },
+  activeTabButton: {
+    backgroundColor: COLOURS.accentLight,
+    borderColor: COLOURS.accent,
+  },
+  tabText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: COLOURS.textSoft,
+  },
+  activeTabText: {
+    color: COLOURS.accent,
+  },
+  globeCountText: {
+    marginTop: 10,
+    fontSize: 12,
+    color: COLOURS.textMuted,
+    textAlign: "center",
   },
   countryItem: {
     fontSize: 13,

@@ -9,24 +9,27 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getFriendProfile } from "../services/friendService";
-
-const COLOURS = {
-  bg: "#F5F0E8",
-  card: "#FFFFFF",
-  accent: "#C47B2B",
-  accentLight: "#F0D9B5",
-  text: "#1C1C1E",
-  textSoft: "#6B6055",
-  textMuted: "#A89B8C",
-  border: "#E2D8CC",
-  danger: "#C0392B",
-};
+import GlobeView from "../components/GlobeView";
+import COLOURS from "../constants/colours";
 
 function StatBox({ value, label }) {
   return (
     <View style={styles.statBox}>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function FriendGlobeCard({ friendName, selectedCountries, onMessage }) {
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>{friendName}'s Globe</Text>
+      <Text style={styles.cardSubtitle}>
+        Countries visited: {selectedCountries.length}
+      </Text>
+
+      <GlobeView selectedCountries={selectedCountries} onMessage={onMessage} />
     </View>
   );
 }
@@ -54,6 +57,15 @@ export default function FriendProfileScreen() {
     loadProfile();
   }, [friendId]);
 
+  function handleGlobeMessage(event) {
+    try {
+      const message = JSON.parse(event.nativeEvent.data);
+      console.log("Friend globe message:", message);
+    } catch (error) {
+      console.log("Globe parse error:", error.message);
+    }
+  }
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -70,6 +82,11 @@ export default function FriendProfileScreen() {
     );
   }
 
+  const friendName = profile?.user?.username || "Friend";
+
+  const friendCountries =
+    profile?.visited_countries?.map((country) => country.name) || [];
+
   return (
     <ScrollView
       style={styles.screen}
@@ -77,8 +94,8 @@ export default function FriendProfileScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.heroCard}>
-        <View style={styles.avatarWrap}>
-          <Text style={styles.avatarEmoji}>👤</Text>
+        <View style={styles.heroAvatar}>
+          <Text style={styles.heroAvatarEmoji}>👤</Text>
         </View>
 
         <Text style={styles.heroTitle}>{profile?.user?.username}</Text>
@@ -98,7 +115,13 @@ export default function FriendProfileScreen() {
         />
       </View>
 
-      <View style={styles.infoCard}>
+      <FriendGlobeCard
+        friendName={friendName}
+        selectedCountries={friendCountries}
+        onMessage={handleGlobeMessage}
+      />
+
+      <View style={styles.card}>
         <Text style={styles.cardTitle}>Continent Breakdown</Text>
 
         {profile?.continent_breakdown?.length > 0 ? (
@@ -113,7 +136,7 @@ export default function FriendProfileScreen() {
         )}
       </View>
 
-      <View style={styles.infoCard}>
+      <View style={styles.card}>
         <Text style={styles.cardTitle}>Most Recent Visit</Text>
 
         {profile?.most_recent_visit ? (
@@ -165,17 +188,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-  avatarWrap: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
+  heroAvatar: {
+    width: 82,
+    height: 82,
+    borderRadius: 41,
     backgroundColor: COLOURS.accentLight,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 14,
   },
-  avatarEmoji: {
-    fontSize: 34,
+  heroAvatarEmoji: {
+    fontSize: 32,
   },
   heroTitle: {
     fontSize: 22,
@@ -212,7 +235,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLOURS.textSoft,
   },
-  infoCard: {
+  card: {
     backgroundColor: COLOURS.card,
     borderRadius: 18,
     padding: 16,
@@ -224,6 +247,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     color: COLOURS.text,
+    marginBottom: 4,
+  },
+  cardSubtitle: {
+    fontSize: 12,
+    color: COLOURS.textSoft,
     marginBottom: 12,
   },
   breakdownRow: {

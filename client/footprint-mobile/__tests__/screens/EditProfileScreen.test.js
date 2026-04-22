@@ -1,7 +1,8 @@
 import React from "react";
-import { render, fireEvent } from "@testing-library/react-native";
+import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import EditProfileScreen from "../../src/screens/EditProfileScreen";
 import { router } from "expo-router";
+import { getProfile, updateProfile } from "../../src/services/userService";
 
 jest.mock("expo-router", () => ({
   router: {
@@ -11,38 +12,63 @@ jest.mock("expo-router", () => ({
   },
 }));
 
+jest.mock("../../src/services/userService", () => ({
+  getProfile: jest.fn(),
+  updateProfile: jest.fn(),
+}));
+
 describe("EditProfileScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+
+    getProfile.mockResolvedValue({
+      username: "maya_reyes",
+      email: "maya@example.com",
+      home_country: "Spain",
+    });
+
+    updateProfile.mockResolvedValue({});
   });
 
-  it("renders edit profile screen fields", () => {
-    const { getByText, getByPlaceholderText } = render(<EditProfileScreen />);
-
-    expect(getByText("Edit your details")).toBeTruthy();
-    expect(
-      getByText("Update your profile information and password."),
-    ).toBeTruthy();
-
-    expect(getByPlaceholderText("maya_reyes")).toBeTruthy();
-    expect(getByPlaceholderText("maya@example.com")).toBeTruthy();
-    expect(getByPlaceholderText("Spain")).toBeTruthy();
-    expect(getByPlaceholderText("Enter current password")).toBeTruthy();
-    expect(getByPlaceholderText("Enter new password")).toBeTruthy();
-    expect(getByPlaceholderText("Confirm new password")).toBeTruthy();
-
-    expect(getByText("Save Changes")).toBeTruthy();
-    expect(getByText("Cancel")).toBeTruthy();
-  });
-
-  it("shows validation errors for empty required profile fields", async () => {
-    const { getByPlaceholderText, getByText, findByText } = render(
+  it("renders loaded profile fields", async () => {
+    const { getByText, getByDisplayValue, getByPlaceholderText } = render(
       <EditProfileScreen />,
     );
 
-    fireEvent.changeText(getByPlaceholderText("maya_reyes"), "");
-    fireEvent.changeText(getByPlaceholderText("maya@example.com"), "");
-    fireEvent.changeText(getByPlaceholderText("Spain"), "");
+    await waitFor(() => {
+      expect(getByText("Edit your details")).toBeTruthy();
+    });
+
+    expect(
+      getByText("Update your essentials and keep your profile current."),
+    ).toBeTruthy();
+
+    expect(getByDisplayValue("maya_reyes")).toBeTruthy();
+    expect(getByDisplayValue("maya@example.com")).toBeTruthy();
+    expect(getByDisplayValue("Spain")).toBeTruthy();
+
+    expect(getByPlaceholderText("Current password")).toBeTruthy();
+    expect(getByPlaceholderText("New password")).toBeTruthy();
+    expect(getByPlaceholderText("Confirm password")).toBeTruthy();
+
+    expect(getByText("Save Changes")).toBeTruthy();
+    expect(getByText("Cancel")).toBeTruthy();
+    expect(getByText("← Back")).toBeTruthy();
+    expect(getByText("Profile Photo")).toBeTruthy();
+  });
+
+  it("shows validation errors for empty required profile fields", async () => {
+    const { getByDisplayValue, getByText, findByText } = render(
+      <EditProfileScreen />,
+    );
+
+    await waitFor(() => {
+      expect(getByDisplayValue("maya_reyes")).toBeTruthy();
+    });
+
+    fireEvent.changeText(getByDisplayValue("maya_reyes"), "");
+    fireEvent.changeText(getByDisplayValue("maya@example.com"), "");
+    fireEvent.changeText(getByDisplayValue("Spain"), "");
 
     fireEvent.press(getByText("Save Changes"));
 
@@ -52,11 +78,15 @@ describe("EditProfileScreen", () => {
   });
 
   it("shows validation error for invalid email", async () => {
-    const { getByPlaceholderText, getByText, findByText } = render(
+    const { getByDisplayValue, getByText, findByText } = render(
       <EditProfileScreen />,
     );
 
-    fireEvent.changeText(getByPlaceholderText("maya@example.com"), "bad-email");
+    await waitFor(() => {
+      expect(getByDisplayValue("maya@example.com")).toBeTruthy();
+    });
+
+    fireEvent.changeText(getByDisplayValue("maya@example.com"), "bad-email");
     fireEvent.press(getByText("Save Changes"));
 
     expect(await findByText("Enter a valid email address.")).toBeTruthy();
@@ -67,8 +97,11 @@ describe("EditProfileScreen", () => {
       <EditProfileScreen />,
     );
 
-    fireEvent.changeText(getByPlaceholderText("Enter new password"), "123456");
+    await waitFor(() => {
+      expect(getByText("Save Changes")).toBeTruthy();
+    });
 
+    fireEvent.changeText(getByPlaceholderText("New password"), "123456");
     fireEvent.press(getByText("Save Changes"));
 
     expect(await findByText("Current password is required.")).toBeTruthy();
@@ -80,12 +113,16 @@ describe("EditProfileScreen", () => {
       <EditProfileScreen />,
     );
 
+    await waitFor(() => {
+      expect(getByText("Save Changes")).toBeTruthy();
+    });
+
     fireEvent.changeText(
-      getByPlaceholderText("Enter current password"),
+      getByPlaceholderText("Current password"),
       "oldpass123",
     );
-    fireEvent.changeText(getByPlaceholderText("Enter new password"), "123");
-    fireEvent.changeText(getByPlaceholderText("Confirm new password"), "123");
+    fireEvent.changeText(getByPlaceholderText("New password"), "123");
+    fireEvent.changeText(getByPlaceholderText("Confirm password"), "123");
 
     fireEvent.press(getByText("Save Changes"));
 
@@ -99,16 +136,17 @@ describe("EditProfileScreen", () => {
       <EditProfileScreen />,
     );
 
+    await waitFor(() => {
+      expect(getByText("Save Changes")).toBeTruthy();
+    });
+
     fireEvent.changeText(
-      getByPlaceholderText("Enter current password"),
+      getByPlaceholderText("Current password"),
       "oldpass123",
     );
+    fireEvent.changeText(getByPlaceholderText("New password"), "newpass123");
     fireEvent.changeText(
-      getByPlaceholderText("Enter new password"),
-      "newpass123",
-    );
-    fireEvent.changeText(
-      getByPlaceholderText("Confirm new password"),
+      getByPlaceholderText("Confirm password"),
       "different123",
     );
 
@@ -117,48 +155,116 @@ describe("EditProfileScreen", () => {
     expect(await findByText("Passwords do not match.")).toBeTruthy();
   });
 
-  it("shows success message when form is valid without password change", async () => {
+  it("shows error when no changes are made", async () => {
     const { getByText, findByText } = render(<EditProfileScreen />);
 
+    await waitFor(() => {
+      expect(getByText("Save Changes")).toBeTruthy();
+    });
+
     fireEvent.press(getByText("Save Changes"));
+
+    expect(await findByText("No changes to save.")).toBeTruthy();
+    expect(updateProfile).not.toHaveBeenCalled();
+  });
+
+  it("shows success message and calls updateProfile when profile fields change", async () => {
+    const { getByDisplayValue, getByText, findByText } = render(
+      <EditProfileScreen />,
+    );
+
+    await waitFor(() => {
+      expect(getByDisplayValue("maya_reyes")).toBeTruthy();
+    });
+
+    fireEvent.changeText(getByDisplayValue("maya_reyes"), "new_maya");
+    fireEvent.press(getByText("Save Changes"));
+
+    await waitFor(() => {
+      expect(updateProfile).toHaveBeenCalledWith({
+        username: "new_maya",
+      });
+    });
 
     expect(await findByText("Profile updated successfully.")).toBeTruthy();
   });
 
-  it("shows success message when password change fields are valid", async () => {
+  it("shows success message and calls updateProfile when password fields are valid", async () => {
     const { getByPlaceholderText, getByText, findByText } = render(
       <EditProfileScreen />,
     );
 
+    await waitFor(() => {
+      expect(getByText("Save Changes")).toBeTruthy();
+    });
+
     fireEvent.changeText(
-      getByPlaceholderText("Enter current password"),
+      getByPlaceholderText("Current password"),
       "oldpass123",
     );
+    fireEvent.changeText(getByPlaceholderText("New password"), "newpass123");
     fireEvent.changeText(
-      getByPlaceholderText("Enter new password"),
-      "newpass123",
-    );
-    fireEvent.changeText(
-      getByPlaceholderText("Confirm new password"),
+      getByPlaceholderText("Confirm password"),
       "newpass123",
     );
 
     fireEvent.press(getByText("Save Changes"));
 
+    await waitFor(() => {
+      expect(updateProfile).toHaveBeenCalledWith({
+        password: "newpass123",
+      });
+    });
+
     expect(await findByText("Profile updated successfully.")).toBeTruthy();
   });
 
-  it("navigates back when cancel is pressed", () => {
+  it("navigates to profile when cancel is pressed", async () => {
     const { getByText } = render(<EditProfileScreen />);
+
+    await waitFor(() => {
+      expect(getByText("Cancel")).toBeTruthy();
+    });
 
     fireEvent.press(getByText("Cancel"));
 
-    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(router.replace).toHaveBeenCalledWith("/profile");
   });
 
-  it("renders change photo button", () => {
+  it("navigates to profile when back is pressed", async () => {
     const { getByText } = render(<EditProfileScreen />);
 
-    expect(getByText("Change Photo")).toBeTruthy();
+    await waitFor(() => {
+      expect(getByText("← Back")).toBeTruthy();
+    });
+
+    fireEvent.press(getByText("← Back"));
+
+    expect(router.replace).toHaveBeenCalledWith("/profile");
+  });
+
+  it("shows server error when getProfile fails", async () => {
+    getProfile.mockRejectedValueOnce(new Error("Failed to load profile"));
+
+    const { findByText } = render(<EditProfileScreen />);
+
+    expect(await findByText("Failed to load profile")).toBeTruthy();
+  });
+
+  it("shows server error when updateProfile fails", async () => {
+    updateProfile.mockRejectedValueOnce(new Error("Update failed"));
+
+    const { getByDisplayValue, getByText, findByText } = render(
+      <EditProfileScreen />,
+    );
+
+    await waitFor(() => {
+      expect(getByDisplayValue("maya_reyes")).toBeTruthy();
+    });
+
+    fireEvent.changeText(getByDisplayValue("maya_reyes"), "updated_name");
+    fireEvent.press(getByText("Save Changes"));
+
+    expect(await findByText("Update failed")).toBeTruthy();
   });
 });
