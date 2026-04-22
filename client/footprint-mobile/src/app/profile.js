@@ -255,10 +255,6 @@ export default function ProfilePage() {
               </Text>
             </View>
           </View>
-
-          <View style={styles.premiumBadge}>
-            <Text style={styles.premiumBadgeText}>2</Text>
-          </View>
         </Pressable>
       </View>
 
