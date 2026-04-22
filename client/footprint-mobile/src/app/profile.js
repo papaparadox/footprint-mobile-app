@@ -196,13 +196,6 @@ export default function ProfilePage() {
         </View>
       </View>
 
-      {/* <Pressable
-        style={styles.shareButton}
-        onPress={() => router.push("/share")}
-      >
-        <Text style={styles.shareButtonText}>Share Profile</Text>
-      </Pressable> */}
-
       <View style={styles.statsRow}>
         <StatPill
           emoji="🌍"
