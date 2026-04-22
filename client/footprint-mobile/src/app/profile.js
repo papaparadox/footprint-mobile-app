@@ -41,14 +41,14 @@ const TRIPS = [
 const MEMORIES = [null, null, null];
 
 const CONTINENT_TOTALS = {
-  "Africa": 54,
-  "Asia": 47,
-  "Europe": 44,
+  Africa: 54,
+  Asia: 47,
+  Europe: 44,
   "North America": 23,
   "South America": 12,
-  "Oceania": 14,
-  "Antarctica": 1,
-}
+  Oceania: 14,
+  Antarctica: 1,
+};
 
 function Avatar({ source }) {
   return (
@@ -76,7 +76,12 @@ function StatPill({ emoji, value, label }) {
   );
 }
 
-function WorldCoverageCard({ percent, visitedCountries, onGlobeTouchStart, onGlobeTouchEnd }) {
+function WorldCoverageCard({
+  percent,
+  visitedCountries,
+  onGlobeTouchStart,
+  onGlobeTouchEnd,
+}) {
   return (
     <View style={styles.mapCard}>
       <View style={styles.mapHeader}>
@@ -85,9 +90,9 @@ function WorldCoverageCard({ percent, visitedCountries, onGlobeTouchStart, onGlo
         <Text style={styles.mapPercent}>{percent}%</Text>
       </View>
 
-      <GlobeView 
-        selectedCountries={visitedCountries} 
-        onMessage={() => {}} 
+      <GlobeView
+        selectedCountries={visitedCountries}
+        onMessage={() => {}}
         onTouchStart={onGlobeTouchStart}
         onTouchEnd={onGlobeTouchEnd}
       />
@@ -133,11 +138,12 @@ export default function ProfilePage() {
       const userData = await getProfile();
       setUser(userData);
 
-      const [statsResult, tripsResult, visitedResult] = await Promise.allSettled([
-        getStats(userData.id),
-        getTripsByUser(userData.id),
-        getVisitedByUser(userData.id),
-      ]);
+      const [statsResult, tripsResult, visitedResult] =
+        await Promise.allSettled([
+          getStats(userData.id),
+          getTripsByUser(userData.id),
+          getVisitedByUser(userData.id),
+        ]);
 
       if (statsResult.status === "fulfilled") {
         setStats(statsResult.value.stats);
@@ -146,7 +152,9 @@ export default function ProfilePage() {
       }
       if (tripsResult.status === "fulfilled") setTrips(tripsResult.value ?? []);
       if (visitedResult.status === "fulfilled") {
-        const names = [...new Set(visitedResult.value.map((v) => v.country_name))];
+        const names = [
+          ...new Set(visitedResult.value.map((v) => v.country_name)),
+        ];
         setVisitedCountries(names);
       }
     } catch (err) {
@@ -208,8 +216,16 @@ export default function ProfilePage() {
       </View>
 
       <View style={styles.statsRow}>
-        <StatPill emoji="🌍" value={stats?.countries_visited ?? 0} label="Countries" />
-        <StatPill emoji="🌐" value={stats?.continents_visited ?? 0} label="Continents" />
+        <StatPill
+          emoji="🌍"
+          value={stats?.countries_visited ?? 0}
+          label="Countries"
+        />
+        <StatPill
+          emoji="🌐"
+          value={stats?.continents_visited ?? 0}
+          label="Continents"
+        />
         <StatPill emoji="✈️" value={trips.length} label="Trips" />
       </View>
 
@@ -241,7 +257,7 @@ export default function ProfilePage() {
 
         <Pressable
           style={styles.premiumFriendsTile}
-          onPress={() => {}}
+          onPress={() => router.push("/friends")}
         >
           <View style={styles.premiumFriendsLeft}>
             <View>
@@ -251,9 +267,6 @@ export default function ProfilePage() {
               </Text>
             </View>
           </View>
-          <View style={styles.premiumBadge}>
-            <Text style={styles.premiumBadgeText}>2</Text>
-          </View>
         </Pressable>
       </View>
 
@@ -262,20 +275,26 @@ export default function ProfilePage() {
           <Text style={styles.recentLabel}>Most Recent Visit</Text>
           <View style={styles.recentRow}>
             <Image
-              source={{ uri: recentVisit.flag_url
-                .replace("https://flagcdn.com/", "https://flagcdn.com/w80/")
-                .replace(".svg", ".png")
+              source={{
+                uri: recentVisit.flag_url
+                  .replace("https://flagcdn.com/", "https://flagcdn.com/w80/")
+                  .replace(".svg", ".png"),
               }}
               style={styles.recentFlag}
             />
             <View>
-              <Text style={styles.recentCountry}>{recentVisit.country_name}</Text>
+              <Text style={styles.recentCountry}>
+                {recentVisit.country_name}
+              </Text>
               <Text style={styles.recentDate}>
-                {new Date(recentVisit.date_visited).toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
+                {new Date(recentVisit.date_visited).toLocaleDateString(
+                  "en-GB",
+                  {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  },
+                )}
               </Text>
             </View>
           </View>
@@ -287,16 +306,17 @@ export default function ProfilePage() {
           <Text style={styles.continentTitle}>Continents Explored</Text>
           {continents.map((c) => {
             const total = CONTINENT_TOTALS[c.continent] || 1;
-            const percent = Math.round((parseInt(c.countries_count) / total) * 100);
+            const percent = Math.round(
+              (parseInt(c.countries_count) / total) * 100,
+            );
 
             return (
               <View key={c.continent} style={styles.continentRow}>
                 <Text style={styles.continentName}>{c.continent}</Text>
                 <View style={styles.continentBarTrack}>
-                  <View style={[
-                    styles.continentBarFill,
-                    { width: `${percent}%` }
-                  ]} />
+                  <View
+                    style={[styles.continentBarFill, { width: `${percent}%` }]}
+                  />
                 </View>
                 <Text style={styles.continentCount}>
                   {c.countries_count}/{total}
@@ -307,8 +327,8 @@ export default function ProfilePage() {
         </View>
       )}
 
-      <WorldCoverageCard 
-        percent={worldPercent} 
+      <WorldCoverageCard
+        percent={worldPercent}
         visitedCountries={visitedCountries}
         onGlobeTouchStart={() => setGlobeTouched(true)}
         onGlobeTouchEnd={() => setGlobeTouched(false)}
@@ -321,9 +341,9 @@ export default function ProfilePage() {
         contentContainerStyle={styles.tripsRow}
       >
         {trips.length > 0 ? (
-          trips.slice(0, 5).map((trip) => (
-            <TripCard key={trip.id} title={trip.title} />
-          ))
+          trips
+            .slice(0, 5)
+            .map((trip) => <TripCard key={trip.id} title={trip.title} />)
         ) : (
           <Text style={styles.emptyTrips}>No trips yet.</Text>
         )}
