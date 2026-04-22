@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { Link } from "expo-router";
 import FormInput from "../components/FormInput";
@@ -9,8 +9,14 @@ import { useAuth } from "../context/AuthContext";
 import { useRouter } from "expo-router";
 
 export default function LoginScreen() {
+  const { signIn, isAuthenticated } = useAuth();
   const router = useRouter();
-  const { signIn } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/countries");
+    }
+  }, [isAuthenticated]);
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
