@@ -24,20 +24,29 @@ Our data is structured to support relational queries between users, their travel
 
 ## Testing
 
-We maintain high code quality through a combination of unit and integration tests 
+We use Jest and Superrtest to ensure both the backend logic and the frontend user interface remain stable. Our tests are divided into two primary directories:
+
+1. Backend and logic (_tests_)
+
+This folder contains tests for the "invsible" parts of the application. 
+
+- Units Tests: Testing individual functions 
+- Integration Tests: Using Supertest to ensure the API endpoints communicate correctly with the database and return the expected status code 
+
+2. Screen and UI Testing (_tests_\screens)
+
+This folder is dedicated to the React Native frontend. 
+
+- Component Testing: Verifiying that UI elements (buttons, inputs, maps) render correctly. 
+- Navigation Testing: Ensuring that when a user clicks "View Trip", the app correctly transitions to the Trip details. 
+- User Flow: Testing if the forms (like register screen) capture input and display the correct validation errors
+
 
 ### Running tests
 
-All tests are located in the  _test_ folder
-Ensure your local environment is set before running tests. 
+To excute the tests, use the following command from the root directory: 
 
-- Run all tests: `npm run test`
-- Run integration tests: `npm run test:integration`
-
-### Writing New Tests: 
-
-- Unit Tests: Used for testing utility functions (e.g., stats calculation or date formatting). Place these in  _test_ /units
-- Integration Tests: Used to verify API endpoints using Supertest. Ensure you mock the database or use a dedicated test database to avoid polluting production data. 
+- Run all tests: `npm test`
 
 ## Deployment 
 
