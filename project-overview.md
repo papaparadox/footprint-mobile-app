@@ -73,4 +73,4 @@ Start the Expo development server
 ## Links to other docs:
 
 - API documentation: Endpoints and Response Codes
-- Operations documentation: Database Schema and Deployment
+- Operations documentation
