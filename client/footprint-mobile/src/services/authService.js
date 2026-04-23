@@ -28,8 +28,6 @@ export async function registerUser(user) {
 export async function loginUser(email, password) {
   try {
     const response = await API.post("user/login", { email, password });
-    const token = response.data.token;
-    if (token) await saveToken(token);
     return response.data;
   } catch (error) {
     throw new Error(extractError(error));

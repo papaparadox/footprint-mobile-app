@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { getToken, saveToken, removeToken } from "../services/tokenService";
+import { getProfile } from "../services/userService";
 
 const AuthContext = createContext(null);
 
@@ -11,8 +12,18 @@ export function AuthProvider({ children }) {
     async function loadToken() {
       try {
         const storedToken = await getToken();
-        if (storedToken) {
+
+        if (!storedToken) {
+          setToken(null);
+          return;
+        }
+
+        try {
+          await getProfile();
           setToken(storedToken);
+        } catch (error) {
+          await removeToken();
+          setToken(null);
         }
       } finally {
         setIsLoading(false);

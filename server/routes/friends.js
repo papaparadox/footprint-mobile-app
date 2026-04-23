@@ -21,5 +21,10 @@ friendsRouter.get("/", friendsController.getFriends);
 friendsRouter.delete("/:friendId", friendsController.removeFriend);
 friendsRouter.get("/:friendId/profile", friendsController.getFriendProfile);
 friendsRouter.get("/:friendId/compare", friendsController.compareWithFriend);
+friendsRouter.post(
+  "/:friendId/travel-chat",
+  authenticateToken,
+  friendsController.travelChatWithFriend,
+);
 
 module.exports = friendsRouter;
