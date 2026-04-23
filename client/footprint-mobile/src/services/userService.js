@@ -1,10 +1,9 @@
 import api from "./api";
 
 function extractError(error) {
-  if (error.response?.data?.err) {
-    return error.response.data.err;
-  }
-
+  if (error.response?.data?.err) return error.response.data.err;
+  if (error.response?.data?.error) return error.response.data.error;
+  if (error.response?.data?.message) return error.response.data.message;
   return error.message || "Something went wrong.";
 }
 
